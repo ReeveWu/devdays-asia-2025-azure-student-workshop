@@ -1,17 +1,14 @@
 import io, os, time, json, requests
 from azure.storage.blob import BlobClient
 
-# from dotenv import load_dotenv
-# load_dotenv()
-
 ai_service_name = os.getenv('AI_FOUNDRY_NAME')
 ai_service_subscription_key = os.getenv('AI_SERVICE_SUBSCRIPTION_KEY')
 
 
-def second2time(seconds):
-    hours = seconds // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = seconds % 60
+def mstotime(milliseconds):
+    hours = milliseconds // 3_600_000
+    minutes = (milliseconds % 3_600_000) // 60_000
+    seconds = (milliseconds % 60_000) // 1_000
     return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
 
