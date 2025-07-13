@@ -1,4 +1,4 @@
-# devdays-asia-2025-student-workshop
+# devdays-asia-2025-student-azure-workshop
 
 ## Project Overview
 
