@@ -28,6 +28,10 @@ This repository contains the code and resources for the DevDays Asia 2025 studen
 - Storage account (with a container named `videos`)
 - Function App (Flex Consumption plan with Python runtime)
 
+## System Architecture (Indexing Pipeline)
+
+![System Architecture](./asset/indexing_pipeline.png)
+
 ## Setup Instructions
 
 1. **Clone the repository**:
