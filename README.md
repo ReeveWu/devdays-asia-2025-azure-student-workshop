@@ -1,4 +1,4 @@
-# devdays-asia-2025-student-azure-workshop
+# devdays-asia-2025-azure-student-workshop
 
 ## Project Overview
 
@@ -36,7 +36,7 @@ This repository contains the code and resources for the DevDays Asia 2025 studen
 
 1. **Clone the repository**:
    ```bash
-   git clone git@github.com:ReeveWu/devdays-asia-2025-student-workshop.git
+   git clone git@github.com:ReeveWu/devdays-asia-2025-azure-student-workshop.git
    cd devdays-asia-2025-student-workshop
    ```
 2. **Create a Python virtual environment**:
