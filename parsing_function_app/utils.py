@@ -34,21 +34,20 @@ def call_fast_transcription_service_test(audio: io.BytesIO):
         'Accept': 'application/json',
         'Ocp-Apim-Subscription-Key': ai_service_subscription_key,
     }
-
     definition = {
         "locales": ["en-US", "zh-CN"],
         "profanityFilterMode": "Masked"
     }
-
     files = {
         'audio': audio,
         'definition': (None, json.dumps(definition), 'application/json'),
     }
-
     response = requests.post(url, headers=headers, files=files)
+    
     if response.status_code != 200:
         raise Exception(f"Failed to call the service. Status code: {response.status_code}, Message: {response.text}")
-    print(f"Transcription service called in {time.time() - start_t} seconds")
+    
+    print(f"Transcription service call took {time.time() - start_t:.2f} seconds")
     return response.json()
 
 
