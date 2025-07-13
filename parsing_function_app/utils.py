@@ -51,8 +51,8 @@ def call_fast_transcription_service_test(audio: io.BytesIO):
 def format_transcription_response(response, video_name):
     segments = []
     for idx, phrase in enumerate(response['phrases']):
-        start_time = second2time(phrase['offsetMilliseconds'])
-        end_time = second2time(phrase['offsetMilliseconds'] + phrase['durationMilliseconds'])
+        start_time = mstotime(phrase['offsetMilliseconds'])
+        end_time = mstotime(phrase['offsetMilliseconds'] + phrase['durationMilliseconds'])
         text = phrase['text']
         segments.append({
             # 'chunk_id': f"{video_name}_{idx}",
