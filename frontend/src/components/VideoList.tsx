@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, List, Avatar, Button, Typography, message, Empty, Spin } from 'antd';
-import { PlayCircleOutlined, CalendarOutlined, FileOutlined } from '@ant-design/icons';
+import { Card, List, Avatar, Button, Typography, message, Empty, Spin, Popconfirm } from 'antd';
+import { PlayCircleOutlined, CalendarOutlined, FileOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { VideoInfo } from '../types';
 import { formatFileSize, formatDuration } from '../utils/helpers';
 import { azureStorageService } from '../services/azureStorageService';
@@ -11,15 +11,22 @@ interface VideoListProps {
   onVideoSelect: (video: VideoInfo) => void;
   selectedVideoId?: string;
   refreshTrigger?: number; // 用於觸發重新載入
+  onVideoDelete?: (videoId: string) => void; // 刪除影片後的回調
+  onVideoIndexingUpdate?: (videoId: string, isIndexing: boolean, isIndexed: boolean) => void; // 索引狀態更新回調
+  pendingVideos?: VideoInfo[]; // 正在處理中的影片
 }
 
 const VideoList: React.FC<VideoListProps> = ({
   onVideoSelect,
   selectedVideoId,
-  refreshTrigger
+  refreshTrigger,
+  onVideoDelete,
+  onVideoIndexingUpdate,
+  pendingVideos = []
 }) => {
   const [videos, setVideos] = useState<VideoInfo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
 
   // 載入影片列表
   const loadVideos = async () => {
@@ -52,6 +59,97 @@ const VideoList: React.FC<VideoListProps> = ({
     
     return date.toLocaleDateString('zh-TW');
   };
+
+  // 刪除影片
+  const handleDeleteVideo = async (video: VideoInfo) => {
+    setDeletingVideoId(video.id);
+    
+    try {
+      console.log('開始刪除影片:', video.name);
+      await azureStorageService.deleteVideo(video.id);
+      
+      message.success(`影片 "${video.name}" 刪除成功`);
+      
+      // 從本地列表中移除影片
+      setVideos(prevVideos => prevVideos.filter(v => v.id !== video.id));
+      
+      // 如果刪除的是當前選中的影片，通知父組件
+      if (selectedVideoId === video.id) {
+        onVideoDelete?.(video.id);
+      }
+      
+    } catch (error) {
+      console.error('刪除影片失敗:', error);
+      const errorMessage = error instanceof Error ? error.message : '刪除失敗';
+      message.error(`刪除影片失敗: ${errorMessage}`);
+    } finally {
+      setDeletingVideoId(null);
+    }
+  };
+
+  // 更新影片索引狀態
+  const updateVideoIndexingStatus = (videoId: string, isIndexing: boolean, isIndexed: boolean) => {
+    setVideos(prevVideos => 
+      prevVideos.map(video => 
+        video.id === videoId 
+          ? { ...video, isIndexing, isIndexed }
+          : video
+      )
+    );
+    onVideoIndexingUpdate?.(videoId, isIndexing, isIndexed);
+  };
+
+  // 渲染選擇按鈕
+  const renderSelectButton = (video: VideoInfo) => {
+    if (video.isIndexing) {
+      return (
+        <Button
+          key="indexing"
+          icon={<LoadingOutlined />}
+          disabled
+          size="small"
+        >
+          處理中
+        </Button>
+      );
+    }
+
+    if (!video.isIndexed) {
+      return (
+        <Button
+          key="waiting"
+          disabled
+          size="small"
+        >
+          等待處理
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        key="select"
+        type={selectedVideoId === video.id ? 'primary' : 'default'}
+        icon={<PlayCircleOutlined />}
+        onClick={() => onVideoSelect(video)}
+        size="small"
+      >
+        {selectedVideoId === video.id ? '已選擇' : '選擇'}
+      </Button>
+    );
+  };
+
+  // 合併待處理影片和已載入影片
+  const allVideos = React.useMemo(() => {
+    // 過濾掉已載入影片中與待處理影片重複的項目
+    const loadedVideosFiltered = videos.filter(
+      video => !pendingVideos.some(pending => pending.id === video.id)
+    );
+    
+    // 合併並按上傳時間排序
+    const combined = [...pendingVideos, ...loadedVideosFiltered];
+    return combined.sort((a, b) => b.uploadDate.getTime() - a.uploadDate.getTime());
+  }, [videos, pendingVideos]);
 
   if (loading) {
     return (
@@ -87,7 +185,7 @@ const VideoList: React.FC<VideoListProps> = ({
         flexDirection: 'column'
       }}
     >
-      {videos.length === 0 ? (
+      {allVideos.length === 0 ? (
         <Empty
           description="尚未上傳任何影片"
           image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -99,19 +197,32 @@ const VideoList: React.FC<VideoListProps> = ({
         }}>
           <List
             itemLayout="horizontal"
-            dataSource={videos}
+            dataSource={allVideos}
             renderItem={(video) => (
               <List.Item
                 actions={[
-                  <Button
-                    key="select"
-                    type={selectedVideoId === video.id ? 'primary' : 'default'}
-                    icon={<PlayCircleOutlined />}
-                    onClick={() => onVideoSelect(video)}
-                    size="small"
+                  renderSelectButton(video),
+                  <Popconfirm
+                    key="delete"
+                    title="確認刪除"
+                    description={`確定要刪除影片 "${video.name}" 嗎？此操作無法復原。`}
+                    onConfirm={() => handleDeleteVideo(video)}
+                    okText="確定刪除"
+                    cancelText="取消"
+                    okType="danger"
+                    disabled={video.isIndexing} // 處理中時禁用刪除
                   >
-                    {selectedVideoId === video.id ? '已選擇' : '選擇'}
-                  </Button>
+                    <Button
+                      icon={<DeleteOutlined />}
+                      loading={deletingVideoId === video.id}
+                      disabled={deletingVideoId === video.id || video.isIndexing} // 處理中時禁用刪除
+                      danger
+                      size="small"
+                      title={video.isIndexing ? '影片處理中，無法刪除' : '刪除影片'}
+                    >
+                      刪除
+                    </Button>
+                  </Popconfirm>
                 ]}
                 style={{
                   backgroundColor: selectedVideoId === video.id ? '#f6ffed' : 'transparent',

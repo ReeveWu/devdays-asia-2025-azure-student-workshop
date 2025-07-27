@@ -183,7 +183,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
             <Avatar 
               icon={isUser ? <UserOutlined /> : <RobotOutlined />}
               style={{
-                backgroundColor: isUser ? '#1890ff' : '#52c41a',
+                backgroundColor: isUser ? '#007acc' : '#00d4aa',
+                color: '#ffffff',
                 flexShrink: 0, // 防止被壓縮
                 width: '32px',
                 height: '32px',
@@ -193,11 +194,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
               size={32}
             />
             <div style={{
-              backgroundColor: isUser ? '#e6f7ff' : '#f6ffed',
+              backgroundColor: isUser ? 'rgba(0, 122, 204, 0.1)' : 'rgba(0, 212, 170, 0.1)',
               padding: '12px 16px',
               borderRadius: '12px',
-              border: `1px solid ${isUser ? '#91d5ff' : '#b7eb8f'}`,
-              position: 'relative'
+              border: `1px solid ${isUser ? 'rgba(0, 122, 204, 0.2)' : 'rgba(0, 212, 170, 0.2)'}`,
+              position: 'relative',
+              backdropFilter: 'blur(10px)'
             }}>
               <Paragraph 
                 style={{ 
@@ -221,7 +223,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
                 justifyContent: 'space-between',
                 alignItems: 'center'
               }}>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
+                <Text type="secondary" style={{ fontSize: '12px', color: '#888' }}>
                   {message.timestamp.toLocaleTimeString('zh-TW', {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -337,9 +339,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
                   alignItems: 'center',
                   gap: 8,
                   padding: '8px 12px',
-                  backgroundColor: '#f0f9ff',
+                  backgroundColor: 'rgba(0, 212, 170, 0.1)',
                   borderRadius: '8px',
-                  border: '1px solid #e0f2fe'
+                  border: '1px solid rgba(0, 212, 170, 0.2)',
+                  backdropFilter: 'blur(10px)'
                 }}>
                   <Spin size="small" />
                   <Text type="secondary" style={{ fontSize: '13px' }}>
@@ -354,7 +357,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
           {/* 輸入區域 */}
           <div style={{ 
             padding: '16px 24px',
-            borderTop: '1px solid #f0f0f0'
+            borderTop: '1px solid rgba(70, 70, 90, 0.4)',
+            backgroundColor: 'rgba(20, 20, 30, 0.8)'
           }}>
             <div style={{ display: 'flex', gap: 8 }}>
               <TextArea

@@ -7,6 +7,8 @@ export interface VideoInfo {
   size: number;
   duration?: number;
   thumbnail?: string;
+  isIndexing?: boolean; // 是否正在索引處理中
+  isIndexed?: boolean;  // 是否已完成索引處理
 }
 
 // 聊天訊息介面
