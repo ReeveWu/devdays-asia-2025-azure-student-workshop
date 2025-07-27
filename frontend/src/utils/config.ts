@@ -19,11 +19,18 @@ export const config = {
     endpoint: process.env.REACT_APP_TRANSCRIPTION_API_ENDPOINT || 'http://localhost:3001/api/transcription',
   },
   
+  // 影片處理 API
+  videoProcessorAPI: {
+    endpoint: process.env.REACT_APP_VIDEO_PROCESSOR_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/index_video',
+    deleteEndpoint: process.env.REACT_APP_VIDEO_PROCESSOR_DELETE_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/delete_video',
+  },
+  
   // 開發模式開關
   features: {
     enableRealStorageUpload: process.env.REACT_APP_ENABLE_REAL_STORAGE_UPLOAD === 'true',
     enableRealOpenAI: process.env.REACT_APP_ENABLE_REAL_OPENAI === 'true',
     enableRealTranscriptionAPI: process.env.REACT_APP_ENABLE_REAL_TRANSCRIPTION_API === 'true',
+    enableRealVideoProcessing: process.env.REACT_APP_ENABLE_REAL_VIDEO_PROCESSING === 'true',
   },
   
   // Mock 配置

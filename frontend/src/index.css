@@ -1,25 +1,418 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* 科技深色主題 - 重新設計 */
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
+/* 全域重置和基礎設定 */
 * {
   box-sizing: border-box;
 }
 
-html, body, #root {
-  height: 100%;
+/* 強制所有元素背景透明，只保留必要的 */
+*:not(body):not(html):not(#root) {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
+/* 基礎背景 */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #0f0f23 100%) !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout 基礎 */
 .ant-layout {
   min-height: 100vh;
+  background: transparent !important;
+}
+
+.ant-layout-content {
+  background: transparent !important;
+}
+
+/* 標題欄 */
+.ant-layout-header {
+  background: rgba(15, 15, 25, 0.95) !important;
+  border-bottom: 1px solid rgba(80, 80, 100, 0.3) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.ant-layout-header h1,
+.ant-layout-header h2,
+.ant-layout-header h3 {
+  color: #ffffff !important;
+  margin: 0 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 修復 App.tsx 中的標題樣式 */
+.ant-layout-header .ant-typography {
+  color: #ffffff !important;
+  text-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+}
+
+/* 卡片樣式 */
+.ant-card {
+  background: rgba(15, 15, 25, 0.85) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* 彩色漸層邊框效果 */
+.ant-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  border-radius: 12px !important;
+  padding: 2px !important;
+  background: linear-gradient(45deg, 
+    #4a9eff 0%, 
+    #00d4aa 25%, 
+    #ff6b6b 50%, 
+    #9b59b6 75%, 
+    #4a9eff 100%) !important;
+  background-size: 300% 300% !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask-composite: exclude !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  animation: borderFlow 4s ease-in-out infinite !important;
+  z-index: -1 !important;
+}
+
+@keyframes borderFlow {
+  0%, 100% { 
+    background-position: 0% 50%; 
+    opacity: 0.8;
+  }
+  50% { 
+    background-position: 100% 50%; 
+    opacity: 1;
+  }
+}
+
+.ant-card-head {
+  background: rgba(20, 20, 30, 0.9) !important;
+  border-bottom: none !important;
+}
+
+.ant-card-head-title {
+  color: #ffffff !important;
+}
+
+.ant-card-body {
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+/* 按鈕樣式 */
+.ant-btn-primary {
+  background: linear-gradient(135deg, #4a9eff 0%, #007acc 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-btn-primary::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
+  transition: left 0.5s ease !important;
+}
+
+.ant-btn-primary:hover::before {
+  left: 100% !important;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #5ba7ff 0%, #1a8add 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(74, 158, 255, 0.4), 
+              0 0 0 2px rgba(74, 158, 255, 0.5),
+              0 0 20px rgba(74, 158, 255, 0.3) !important;
+  border: 1px solid rgba(74, 158, 255, 0.8) !important;
+}
+
+.ant-btn {
+  background: rgba(40, 40, 55, 0.8) !important;
+  border: 1px solid rgba(80, 80, 100, 0.4) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.ant-btn::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  border: 2px solid transparent !important;
+  border-radius: inherit !important;
+  background: linear-gradient(45deg, #4a9eff, #00d4aa, #ff6b6b, #4a9eff) !important;
+  background-size: 400% 400% !important;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  mask-composite: exclude !important;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+  -webkit-mask-composite: xor !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.ant-btn:hover::after {
+  opacity: 1 !important;
+  animation: borderGlow 2s ease-in-out infinite !important;
+}
+
+@keyframes borderGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.ant-btn:hover {
+  background: rgba(50, 50, 65, 0.9) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 輸入框樣式 */
+.ant-input {
+  background: rgba(25, 25, 35, 0.8) !important;
+  border: 1px solid rgba(80, 80, 100, 0.4) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease !important;
+}
+
+.ant-input:focus {
+  border-color: rgba(74, 158, 255, 0.6) !important;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2) !important;
+  background: rgba(30, 30, 40, 0.9) !important;
+  transform: translateY(-1px) !important;
+}
+
+.ant-input::placeholder {
+  color: #888 !important;
+}
+
+/* 列表項目 */
+.ant-list-item {
+  background: rgba(20, 20, 30, 0.8) !important;
+  border: 1px solid rgba(80, 80, 100, 0.3) !important;
+  border-radius: 8px !important;
+  margin-bottom: 8px !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease !important;
+}
+
+.ant-list-item:hover {
+  background: rgba(25, 25, 35, 0.9) !important;
+  border-color: rgba(74, 158, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 上傳區域 */
+.ant-upload-drag {
+  background: rgba(20, 20, 30, 0.6) !important;
+  border: 2px dashed rgba(80, 80, 100, 0.5) !important;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease !important;
+}
+
+.ant-upload-drag:hover {
+  border-color: rgba(74, 158, 255, 0.6) !important;
+  background: rgba(25, 25, 35, 0.8) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+}
+
+.ant-upload-drag .ant-upload-text {
+  color: #ffffff !important;
+}
+
+.ant-upload-drag .ant-upload-hint {
+  color: #aaa !important;
+}
+
+/* 文字樣式 */
+.ant-typography {
+  color: #ffffff !important;
+}
+
+.ant-typography h1,
+.ant-typography h2,
+.ant-typography h3,
+.ant-typography h4,
+.ant-typography h5,
+.ant-typography h6 {
+  color: #ffffff !important;
+}
+
+/* Empty 狀態 */
+.ant-empty {
+  color: #888 !important;
+}
+
+.ant-empty-description {
+  color: #888 !important;
+}
+
+/* 下拉選單 */
+.ant-select-dropdown {
+  background: rgba(20, 20, 30, 0.95) !important;
+  border: 1px solid rgba(80, 80, 100, 0.4) !important;
+  backdrop-filter: blur(20px);
+}
+
+.ant-select-item {
+  color: #ffffff !important;
+}
+
+.ant-select-item:hover {
+  background: rgba(74, 158, 255, 0.2) !important;
+}
+
+/* 訊息通知 */
+.ant-message-notice-content {
+  background: rgba(20, 20, 30, 0.95) !important;
+  border: 1px solid rgba(80, 80, 100, 0.4) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(20px);
+}
+
+/* 彈出視窗 */
+.ant-popover-inner {
+  background: rgba(20, 20, 30, 0.95) !important;
+  border: 1px solid rgba(80, 80, 100, 0.4) !important;
+  backdrop-filter: blur(20px);
+}
+
+.ant-popover-inner-content {
+  color: #ffffff !important;
+}
+
+/* 隱藏所有滾動條 */
+/* Webkit 瀏覽器 (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+  display: none !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+  display: none !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  display: none !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+  display: none !important;
+}
+
+/* Firefox */
+html {
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+* {
+  scrollbar-width: none !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+/* 通用隱藏方法 */
+body, html, #root, * {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -ms-overflow-style: none !important; /* IE 和 Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+/* 確保功能性不受影響 */
+body, html, #root {
+  overflow: auto !important;
+}
+
+/* 進度條 */
+.ant-progress-bg {
+  background: linear-gradient(135deg, #4a9eff, #007acc) !important;
+}
+
+.ant-progress-inner {
+  background: rgba(40, 40, 55, 0.8) !important;
+}
+
+/* 載入動畫 */
+.ant-spin-dot-item {
+  background-color: #4a9eff !important;
+}
+
+/* 選中狀態 */
+.ant-list-item.selected {
+  background: rgba(74, 158, 255, 0.2) !important;
+  border-color: rgba(74, 158, 255, 0.6) !important;
+}
+
+/* hover 效果 */
+.ant-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-card:hover::before {
+  animation-duration: 2s !important;
+  opacity: 1 !important;
+  background-size: 400% 400% !important;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .ant-card {
+    margin: 8px;
+    border-radius: 8px !important;
+  }
 }

@@ -1,0 +1,24 @@
+azure:
+  resourceGroup: <your-resource-group-name>
+  functionApp:
+    name: <your-function-app-name>
+    zipFile: function_app.zip
+  openAI:
+    endpoint: <your-openai-endpoint>
+    apiKey: <your-openai-api-key>
+    embeddingModelName: text-embedding-3-large
+    embeddingDeploymentName: text-embedding-3-large
+    embeddingDimensions: 3072
+  aiService:
+    name: <your-ai-service-name>
+    subscriptionKey: <your-ai-service-subscription-key>
+  searchService:
+    name: <your-search-service-name>
+    clientKey: <your-search-service-client-key>
+    indexName: video-index
+  storage:
+    accountName: <your-storage-account-name>
+    blobContainerName: videos
+    connectionString: <your-storage-connection-string>
+    
+    
