@@ -1,6 +1,0 @@
-requests
-openai
-azure-storage-blob
-azure-search-documents
-
-python-dotenv
