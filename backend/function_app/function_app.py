@@ -16,7 +16,7 @@ def index_video(req: func.HttpRequest) -> func.HttpResponse:
                 "Missing 'video_name' in request body.",
                 status_code=400
             )
-
+        
         audio_stream = utils.get_blob_from_connection_string(video_name)
         response = utils.call_fast_transcription_service_test(audio_stream)
         segments = utils.format_transcription_response(response, video_name)
