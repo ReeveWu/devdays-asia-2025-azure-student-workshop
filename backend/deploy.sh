@@ -17,8 +17,8 @@ parse_yaml() {
     }'
 }
 
+# Check if Azure CLI is installed
 CONFIG_FILE="config.yaml"
-
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: $CONFIG_FILE not found"
     exit 1

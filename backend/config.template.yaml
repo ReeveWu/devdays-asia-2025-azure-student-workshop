@@ -18,6 +18,7 @@ azure:
     indexName: video-index
   storage:
     accountName: <your-storage-account-name>
-    connectionString: <your-storage-connection-string>
     blobContainerName: videos
+    connectionString: <your-storage-connection-string>
+    
     
