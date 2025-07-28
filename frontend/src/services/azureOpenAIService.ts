@@ -297,16 +297,16 @@ class AzureOpenAIService {
     };
 
     // 🔍 取得相關影片內容片段
-    const relatedChunks = await this.fetchRelevantChunks(question, videoId);
-    const contextText = relatedChunks.length > 0
-      ? `以下是從影片檢索到的相關內容：\n\n${relatedChunks.join('\n\n')}`
-      : '⚠️ 無法從影片中檢索到相關內容，請確認影片是否已被索引。';
+    // const relatedChunks = await this.fetchRelevantChunks(question, videoId);
+    // const contextText = relatedChunks.length > 0
+    //   ? `以下是從影片檢索到的相關內容：\n\n${relatedChunks.join('\n\n')}`
+    //   : '⚠️ 無法從影片中檢索到相關內容，請確認影片是否已被索引。';
 
     const messages = [
       systemMessage,
       {
         role: 'user',
-        content: `${contextText}\n\nAnd the user asks: ${question}`
+        content: question
       },
       ...chatHistory
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
