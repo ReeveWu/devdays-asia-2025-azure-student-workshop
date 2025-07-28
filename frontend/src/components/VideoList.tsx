@@ -108,6 +108,14 @@ const VideoList: React.FC<VideoListProps> = ({
           icon={<LoadingOutlined />}
           disabled
           size="small"
+          style={{
+            borderRadius: '20px',
+            minWidth: '80px',
+            height: '32px',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            borderColor: 'rgba(255, 193, 7, 0.3)',
+            color: '#ffc107'
+          }}
         >
           處理中
         </Button>
@@ -120,6 +128,14 @@ const VideoList: React.FC<VideoListProps> = ({
           key="waiting"
           disabled
           size="small"
+          style={{
+            borderRadius: '20px',
+            minWidth: '80px',
+            height: '32px',
+            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+            borderColor: 'rgba(108, 117, 125, 0.3)',
+            color: '#6c757d'
+          }}
         >
           等待處理
         </Button>
@@ -129,10 +145,26 @@ const VideoList: React.FC<VideoListProps> = ({
     return (
       <Button
         key="select"
-        type={selectedVideoId === video.id ? 'primary' : 'default'}
         icon={<PlayCircleOutlined />}
         onClick={() => onVideoSelect(video)}
         size="small"
+        style={{
+          borderRadius: '20px',
+          minWidth: '80px',
+          height: '32px',
+          backgroundColor: selectedVideoId === video.id 
+            ? '#f6ffed' 
+            : 'rgba(74, 158, 255, 0.1)',
+          borderColor: selectedVideoId === video.id 
+            ? '#52c41a' 
+            : 'rgba(74, 158, 255, 0.3)',
+          color: selectedVideoId === video.id 
+            ? '#52c41a' 
+            : '#4a9eff',
+          fontWeight: '500',
+          transition: 'all 0.3s ease',
+          boxShadow: 'none'
+        }}
       >
         {selectedVideoId === video.id ? '已選擇' : '選擇'}
       </Button>
@@ -175,14 +207,9 @@ const VideoList: React.FC<VideoListProps> = ({
       style={{ 
         height: '100%',
         display: 'flex',
-        flexDirection: 'column'
-      }}
-      bodyStyle={{ 
-        flex: 1,
-        padding: '16px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative',
+        paddingTop: 2,
       }}
     >
       {allVideos.length === 0 ? (
@@ -219,6 +246,16 @@ const VideoList: React.FC<VideoListProps> = ({
                       danger
                       size="small"
                       title={video.isIndexing ? '影片處理中，無法刪除' : '刪除影片'}
+                      style={{
+                        borderRadius: '20px',
+                        minWidth: '80px',
+                        height: '32px',
+                        backgroundColor: 'rgba(255, 77, 79, 0.1)',
+                        borderColor: 'rgba(255, 77, 79, 0.3)',
+                        color: '#ff4d4f',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
                     >
                       刪除
                     </Button>
