@@ -60,3 +60,30 @@ def delete_video(req: func.HttpRequest) -> func.HttpResponse:
             str(e),
             status_code=500
         )
+
+
+@app.route(route="query_video")
+def query_video(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Received a request to query video index.')
+    try:
+        req_body = req.get_json()
+        question = req_body.get("question", "")
+        if not question:
+            return func.HttpResponse(
+                "Missing 'question' in request body.",
+                status_code=400
+            )
+        
+        context = utils.query_video_segments(question)
+        return func.HttpResponse(
+            body=json.dumps({"chunks": context}),
+            mimetype="application/json",
+            status_code=200
+        )
+    
+    except Exception as e:
+        logging.error(f"Error querying video index: {str(e)}")
+        return func.HttpResponse(
+            str(e),
+            status_code=500
+        )

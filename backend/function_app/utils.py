@@ -114,3 +114,32 @@ def delete_documents_by_video_name(video_name: str):
         logging.info(f"Requested deletion of {len(result)} documents.")
     else:
         logging.info("No documents found to delete.")
+
+
+def query_video_segments(question: str, top_k: int = 5):
+    embedding = embed_text(question)
+
+    results = search_client.search(
+        search_text=question,
+        vectors=[{
+            "value": embedding,
+            "fields": "vector",
+            "k": top_k
+        }],
+        top=top_k,
+        query_type="semantic",
+        semantic_configuration_name="semantic-config",
+        vector_search_options={"profile": "vector-profile"},
+    )
+
+    context_chunks = []
+    for result in results:
+        chunk = {
+            "video_name": result.get("video_name"),
+            "start_time": result.get("start_time"),
+            "end_time": result.get("end_time"),
+            "text": result.get("text"),
+        }
+        context_chunks.append(chunk)
+
+    return context_chunks
