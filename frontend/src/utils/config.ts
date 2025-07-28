@@ -23,6 +23,7 @@ export const config = {
   videoProcessorAPI: {
     endpoint: process.env.REACT_APP_VIDEO_PROCESSOR_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/index_video',
     deleteEndpoint: process.env.REACT_APP_VIDEO_PROCESSOR_DELETE_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/delete_video',
+    queryEndpoint: process.env.REACT_APP_VIDEO_PROCESSOR_QUERY_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/query_video',
   },
   
   // 開發模式開關

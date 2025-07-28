@@ -1,5 +1,6 @@
 import { ChatMessage, TranscriptionQuery, TranscriptionResponse } from '../types';
 import { generateId, delay, safeJsonParse } from '../utils/helpers';
+import { config as appConfig } from '../utils/config';
 
 declare const process: any;
 
@@ -259,6 +260,25 @@ class AzureOpenAIService {
     console.log('✅ [Mock] 串流完成');
   }
 
+  private async fetchRelevantChunks(question: string, videoId: string): Promise<string[]> {
+    const response = await fetch(appConfig.videoProcessorAPI.queryEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, video_name: videoId })
+    });
+
+    if (!response.ok) {
+      console.error('❌ 無法取得相關內容:', response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return (data.chunks || []).map(
+      (chunk: { video_name: string, start_time: string, end_time: string, text: string }) =>
+        `[${chunk.video_name} | ${chunk.start_time} - ${chunk.end_time}]\n${chunk.text}`
+    );
+  }
+
   // 發送問題並取得串流回應
   async *askQuestion(
     question: string,
@@ -276,8 +296,18 @@ class AzureOpenAIService {
       content: '你是一個專業的影片內容分析助手。你可以根據用戶的問題，使用提供的工具查詢相關的影片轉錄內容，然後給出準確且有幫助的回答。請用繁體中文回應。'
     };
 
+    // 🔍 取得相關影片內容片段
+    const relatedChunks = await this.fetchRelevantChunks(question, videoId);
+    const contextText = relatedChunks.length > 0
+      ? `以下是從影片檢索到的相關內容：\n\n${relatedChunks.join('\n\n')}`
+      : '⚠️ 無法從影片中檢索到相關內容，請確認影片是否已被索引。';
+
     const messages = [
       systemMessage,
+      {
+        role: 'user',
+        content: `${contextText}\n\nAnd the user asks: ${question}`
+      },
       ...chatHistory
         .filter(msg => msg.role === 'user' || msg.role === 'assistant')
         .map(msg => ({
