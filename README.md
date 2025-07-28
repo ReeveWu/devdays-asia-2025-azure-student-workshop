@@ -4,21 +4,6 @@
 
 This repository contains the code and resources for the DevDays Asia 2025 student workshop, focusing on building AI applications using Azure services. The workshop covers various topics, including Azure OpenAI, Azure Cognitive Search, and more.
 
-## Current Directory Structure
-
-```bash
-.
-├── create_indexing_pipeline
-│   ├── create_aisearch.ipynb
-│   └── requirements.txt
-└── parsing_function_app
-    ├── function_app.py
-    ├── host.json
-    ├── local.settings.json
-    ├── requirements.txt
-    └── utils.py
-```
-
 ## Azure Pre-requisites
 
 - Subscription
