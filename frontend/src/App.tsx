@@ -154,9 +154,9 @@ const App: React.FC = () => {
 
         {/* 主要內容 */}
         <Content style={{ 
+          
           padding: '24px', 
-          height: 'calc(100vh - 88px)', // 調整為 Header 的實際高度
-          overflow: 'hidden'
+          height: 'calc(100vh - 88px)', // 調整為 Header 的實際高度,
         }}>
           <Row gutter={[24, 24]} style={{ height: '100%' }}>
             {/* 左側：影片上傳和列表 */}
@@ -165,12 +165,13 @@ const App: React.FC = () => {
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: 3,
-                height: '100%'
+                height: '100%',
               }}>
                 {/* 影片上傳 - 固定高度 */}
                 <div style={{ 
                   flexShrink: 0,
-                  height: 'auto'
+                  height: 'auto',
+                  paddingTop: 3,
                 }}>
                   <VideoUpload
                     onUploadSuccess={handleUploadSuccess}
@@ -183,7 +184,8 @@ const App: React.FC = () => {
                 <div style={{ 
                   flex: 1,
                   minHeight: 0, // 重要：讓 flex 子元素可以縮小
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  paddingTop: 3,
                 }}>
                   <VideoList
                     onVideoSelect={handleVideoSelect}
@@ -199,7 +201,7 @@ const App: React.FC = () => {
 
             {/* 右側：聊天介面 - 填滿整個高度 */}
             <Col xs={24} lg={14} style={{ height: '100%' }}>
-              <div style={{ height: '100%' }}>
+              <div style={{ height: '100%', paddingTop: 3 }}>
                 <ChatInterface selectedVideo={selectedVideo} />
               </div>
             </Col>

@@ -161,10 +161,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
     const isUser = message.role === 'user';
     
     return (
-      <List.Item
+      <div
         key={message.id}
         style={{
           padding: '12px 0',
+          border: 'none',
           borderBottom: 'none'
         }}
       >
@@ -244,7 +245,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
             </div>
           </div>
         </div>
-      </List.Item>
+      </div>
     );
   };
 
@@ -273,14 +274,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
       style={{ 
         height: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        position: 'relative'
       }}
       bodyStyle={{ 
         flex: 1,
         display: 'flex', 
         flexDirection: 'column',
         padding: 0,
-        overflow: 'hidden'
+        overflow: 'visible'
       }}
     >
       {!selectedVideo ? (
@@ -321,11 +323,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
                 />
               </div>
             ) : (
-              <List
-                dataSource={allMessages}
-                renderItem={renderMessage}
-                style={{ padding: '16px 0' }}
-              />
+              <div style={{ padding: '16px 0' }}>
+                {allMessages.map(renderMessage)}
+              </div>
             )}
             {streamingMessage?.isStreaming && (
               <div style={{ 
@@ -360,7 +360,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
             borderTop: '1px solid rgba(70, 70, 90, 0.4)',
             backgroundColor: 'rgba(20, 20, 30, 0.8)'
           }}>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, paddingTop: 3 }}>
               <TextArea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}

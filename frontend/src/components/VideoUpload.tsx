@@ -95,8 +95,8 @@ const VideoUpload: React.FC<VideoUploadProps> = ({
   };
 
   return (
-    <Card title="影片上傳" style={{ marginBottom: 24 }}>
-      <div style={{ marginBottom: 16 }}>
+    <Card title="影片上傳" style={{ marginBottom: 6, position: 'relative' }}>
+      <div style={{ marginBottom: 16, paddingTop: 3 }}>
         <Dragger
           name="video"
           multiple={false}
