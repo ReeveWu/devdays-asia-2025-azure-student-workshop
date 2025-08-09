@@ -96,6 +96,16 @@ This repository contains the code and resources for the DevDays Asia 2025 studen
   >   ```
   >   Then, you can open the web URL using any device with any OS and insert the device code which you just got.
 
+  (If needed) Install necessary packages:
+  ```bash
+  sudo apt update | sudo apt install zip
+  ```
+
+  Run the command to deploy function app to Azure Portal.
+  ```bash
+  ./deploy.sh
+  ```
+
 ## Create Indexing Pipeline (I think this should be removed)
 
 - Install the required packages:
