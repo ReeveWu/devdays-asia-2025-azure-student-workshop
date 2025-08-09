@@ -30,28 +30,31 @@ This repository contains the code and resources for the DevDays Asia 2025 studen
     source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
    ```
 
-## Create Parsing Function App
+## Create Function App
 
-- Navigate to the `parsing_function_app` directory:
+- Navigate to the `backend` directory:
   ```bash
-  cd parsing_function_app
+  cd backend
   ```
-- Set up the environment variables in Azure Function App (Refer to `.env.template`):
+- Set up the environment variables in Azure Function App (Refer to `config.template.yaml`):
 
-  - `AI_FOUNDRY_NAME`: Name of the AI Foundry project.
-  - `AI_SERVICE_SUBSCRIPTION_KEY`: Subscription key for the AI service.
-
+  - `aiService.name`: Name of the AI Service.
+  - `aiService.subscriptionKey`: Subscription key for the AI service.
+- Create a `config.yaml` file based on the `config.template.yaml` and fill in the required values:
+  ```bash
+  cp config.yaml config.template.yaml
+  ```
 - Deploy the Function App (e.g., using Azure CLI or Azure VS Code extension).
 
 ## Create Indexing Pipeline
 
+- Install the required packages:
+  ```bash
+  pip install -r function_app/requirements.txt
+  ```
 - Navigate to the `create_indexing_pipeline` directory:
   ```bash
   cd create_indexing_pipeline
-  ```
-- Install the required packages:
-  ```bash
-  pip install -r requirements.txt
   ```
 - Create a `.env` file based on the `.env.template` and fill in the required values:
   ```bash
