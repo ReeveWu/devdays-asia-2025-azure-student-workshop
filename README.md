@@ -38,11 +38,11 @@ This repository contains the code and resources for the DevDays Asia 2025 studen
   ```
 - Set up the environment variables in Azure Function App (Refer to `config.template.yaml`):
 
-  - `aiService.name`: Name of the AI Service.
+  - `aiService.name`: Name of the AI Service (AI Foundry project).
   - `aiService.subscriptionKey`: Subscription key for the AI service.
 - Create a `config.yaml` file based on the `config.template.yaml` and fill in the required values:
   ```bash
-  cp config.yaml config.template.yaml
+  cp config.template.yaml config.yaml
   ```
 - Deploy the Function App (e.g., using Azure CLI or Azure VS Code extension).
 
