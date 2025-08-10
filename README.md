@@ -25,14 +25,14 @@ This project aims to build a video Q&A experience on Azure. Users can upload vid
 
 ```plaintext
 backend/
-  ├─ function_app/       # Azure Functions (HTTP triggers, Python)
-  ├─ create_index/       # Script to create/update AI Search index
-  ├─ functionapp.sh      # Deploys function app, sets settings + CORS
-  ├─ storage.sh          # Configures Blob public access + CORS
-  ├─ index.sh            # Loads env vars, creates Search index
-  ├─ config.template.yaml# Copy to config.yaml & fill values
-frontend/                # React app (frontend; details later)
-asset/                   # Architecture diagram
+  ├─ function_app/         # Azure Functions (HTTP triggers, Python)
+  ├─ create_index/         # Script to create/update AI Search index
+  ├─ functionapp.sh        # Deploys function app, sets settings + CORS
+  ├─ storage.sh            # Configures Blob public access + CORS
+  ├─ index.sh              # Loads env vars, creates Search index
+  ├─ config.template.yaml  # Copy to config.yaml & fill values
+frontend/                  # React app (frontend; details later)
+asset/                     # Architecture diagram
 ```
 
 ---
