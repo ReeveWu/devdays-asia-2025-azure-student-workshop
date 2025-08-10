@@ -32,7 +32,7 @@ eval $(parse_yaml $CONFIG_FILE "config_")
 echo "Updating function app environment variables..."
 az functionapp config appsettings set \
   --name "$config_azure_functionApp_name" \
-  --resource-group "$config_azure_resourceGroup" \
+  --resource-group "$config_azure_resourceGroup_name" \
   --settings AZURE_OPENAI_ENDPOINT="$config_azure_openAI_endpoint" \
               AZURE_OPENAI_API_KEY="$config_azure_openAI_apiKey" \
               AZURE_OPENAI_EMBEDDING_MODEL_NAME="$config_azure_openAI_embeddingModelName" \
@@ -55,7 +55,7 @@ cd ..
 # Deploy the function app
 echo "Deploying function app (It may take a while)..."
 az functionapp deployment source config-zip \
-  --resource-group "$config_azure_resourceGroup" \
+  --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --src "$config_azure_functionApp_zipFile"
 
@@ -64,12 +64,12 @@ rm -rf "$config_azure_functionApp_zipFile"
 # Configure CORS settings for the function app
 echo "Configuring CORS settings for the function app..."
 az functionapp cors remove \
-  --resource-group "$config_azure_resourceGroup" \
+  --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --allowed-origins
 
 az functionapp cors add \
-  --resource-group "$config_azure_resourceGroup" \
+  --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --allowed-origins '*'
 
@@ -77,7 +77,7 @@ az functionapp cors add \
 echo "Configuring access policies for the storage account..."
 az storage account update \
   --name "$config_azure_storage_accountName" \
-  --resource-group "$config_azure_resourceGroup" \
+  --resource-group "$config_azure_resourceGroup_name" \
   --allow-blob-public-access true
 
 az storage container set-permission \
