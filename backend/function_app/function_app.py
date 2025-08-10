@@ -67,16 +67,17 @@ def query_video(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Received a request to query video index.')
     try:
         req_body = req.get_json()
-        question = req_body.get("question", "")
-        if not question:
+        query = req_body.get("query", "")
+        video_name = req_body.get("videoId", "")
+        if not query:
             return func.HttpResponse(
-                "Missing 'question' in request body.",
+                "Missing 'query' in request body.",
                 status_code=400
             )
-        
-        context = utils.query_video_segments(question)
+
+        context = utils.query_video_segments_by_video(query, video_name)
         return func.HttpResponse(
-            body=json.dumps({"chunks": context}),
+            body=json.dumps({"text": context}),
             mimetype="application/json",
             status_code=200
         )

@@ -81,13 +81,36 @@ def embed_text(text: str):
 
 def format_transcription_response(response, video_name):
     segments = []
-    for idx, phrase in enumerate(response['phrases']):
-        start_time = mstotime(phrase['offsetMilliseconds'])
+    start_time = None
+    end_time = None
+    text = ""
+    cnt = 0
+    for phrase in response['phrases']:
+        if start_time is None:
+            start_time = mstotime(phrase['offsetMilliseconds'])
+        text += f'{phrase["text"].strip()}\n\n'
+        cnt += 1
+
+        if len(text.split()) > 15 or cnt == 3:
+            end_time = mstotime(phrase['offsetMilliseconds'] + phrase['durationMilliseconds'])
+            segments.append({
+                'chunk_id': str(uuid.uuid4()),
+                'id': str(len(segments)),
+                'start_time': start_time,
+                'end_time': end_time,
+                'text': text,
+                'video_name': video_name,
+                'vector': embed_text(text)
+            })
+            start_time = None
+            text = ""
+            cnt = 0
+
+    if len(text) > 0:
         end_time = mstotime(phrase['offsetMilliseconds'] + phrase['durationMilliseconds'])
-        text = phrase['text']
         segments.append({
             'chunk_id': str(uuid.uuid4()),
-            'id': str(idx),
+            'id': str(len(segments)),
             'start_time': start_time,
             'end_time': end_time,
             'text': text,
@@ -116,30 +139,110 @@ def delete_documents_by_video_name(video_name: str):
         logging.info("No documents found to delete.")
 
 
-def query_video_segments(question: str, top_k: int = 5):
-    embedding = embed_text(question)
+from typing import List, Dict, Any
+from azure.core.exceptions import HttpResponseError
+from azure.search.documents.models import VectorizedQuery
+
+def _escape_odata_literal(s: str) -> str:
+    # OData 單引號要重複一次：O'Reilly -> 'O''Reilly'
+    return s.replace("'", "''")
+
+def query_video_segments_by_video(
+    question: str,
+    video_name: str,
+    top_base: int = 2,
+) -> List[Dict[str, Any]]:
+    FIELDS = ["chunk_id", "id", "video_name", "text", "start_time", "end_time"]
+
+    question_vector = embed_text(question)
+    vq = VectorizedQuery(vector=question_vector, k_nearest_neighbors=top_base * 3, fields="vector")
+
+    filter_expr = f"video_name eq '{_escape_odata_literal(video_name)}'"
 
     results = search_client.search(
-        search_text=question,
-        vectors=[{
-            "value": embedding,
-            "fields": "vector",
-            "k": top_k
-        }],
-        top=top_k,
-        query_type="semantic",
-        semantic_configuration_name="semantic-config",
-        vector_search_options={"profile": "vector-profile"},
+        search_text=question,                 
+        vector_queries=[vq],
+        filter=filter_expr,
+        top=top_base,
+        select=FIELDS,
+        include_total_count=False,
     )
 
-    context_chunks = []
-    for result in results:
-        chunk = {
-            "video_name": result.get("video_name"),
-            "start_time": result.get("start_time"),
-            "end_time": result.get("end_time"),
-            "text": result.get("text"),
-        }
-        context_chunks.append(chunk)
+    seeds = [r for r in results]  
+    if not seeds:
+        return []
 
-    return context_chunks
+    
+    neighbor_ids: set[str] = set()
+    seed_by_id: dict[str, Dict[str, Any]] = {}  
+
+    for s in seeds:
+        seed_by_id[str(s["id"])] = s
+        try:
+            base = int(str(s["id"]))
+            neighbor_ids.add(str(base - 1))
+            neighbor_ids.add(str(base + 1))
+        except ValueError:
+            
+            pass
+
+    neighbor_docs_by_id: dict[str, Dict[str, Any]] = {}
+    if neighbor_ids:
+        id_list = ",".join(sorted(neighbor_ids))
+        filter_neighbors = (
+            f"video_name eq '{_escape_odata_literal(video_name)}' "
+            f"and search.in(id, '{id_list}', ',')"
+        )
+        neighbor_results = search_client.search(
+            search_text="*",    
+            filter=filter_neighbors,
+            top=len(neighbor_ids),
+            select=FIELDS,
+        )
+        for doc in neighbor_results:
+            neighbor_docs_by_id[str(doc["id"])] = doc
+
+    seen_chunk_ids: set[str] = set()
+    out: List[Dict[str, Any]] = []
+
+    def _emit(doc):
+        cid = doc["chunk_id"]
+        if cid not in seen_chunk_ids:
+            seen_chunk_ids.add(cid)
+            out.append({
+                "chunk_id": doc["chunk_id"],
+                "id": doc["id"],
+                "video_name": doc["video_name"],
+                "text": doc["text"],
+                "start_time": doc["start_time"],
+                "end_time": doc["end_time"],
+                "score": doc.get("@search.score", 0),
+            })
+
+    for s in seeds:
+        try:
+            base = int(str(s["id"]))
+            prev_id = str(base - 1)
+            if prev_id in neighbor_docs_by_id:
+                _emit(neighbor_docs_by_id[prev_id])
+        except ValueError:
+            pass
+        _emit(s)
+        try:
+            base = int(str(s["id"]))
+            next_id = str(base + 1)
+            if next_id in neighbor_docs_by_id:
+                _emit(neighbor_docs_by_id[next_id])
+        except ValueError:
+            pass
+
+    response = "Here are the transcript segments that related to your query:\n\n"
+    prev_id = None
+    for chunk in out:
+        vid = int(chunk["id"])
+        if prev_id is not None and prev_id != vid-1:
+            response += "---\n"
+        response += f"[{chunk['start_time']} - {chunk['end_time']}]\n{chunk['text'].strip()}\n\n"
+        prev_id = vid
+
+    return response
