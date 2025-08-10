@@ -1,5 +1,5 @@
-import { ChatMessage, TranscriptionQuery, TranscriptionResponse } from '../types';
-import { generateId, delay, safeJsonParse } from '../utils/helpers';
+import { ChatMessage, StreamEvent } from '../types';
+import { safeJsonParse } from '../utils/helpers';
 import { config as appConfig } from '../utils/config';
 
 declare const process: any;
@@ -11,13 +11,7 @@ const config = {
     deploymentName: process.env.REACT_APP_AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o',
     apiVersion: process.env.REACT_APP_AZURE_OPENAI_API_VERSION || '2024-10-21',
   },
-  features: {
-    enableRealOpenAI: process.env.REACT_APP_ENABLE_REAL_OPENAI === 'true',
-  },
-  mock: {
-    delayMs: parseInt(process.env.REACT_APP_MOCK_DELAY_MS || '30'),
-    streamingDelayMs: parseInt(process.env.REACT_APP_STREAMING_DELAY_MS || '20'),
-  },
+  // 已移除 mock 與開發模式，僅保留真實 API 設定
 };
 
 class AzureOpenAIService {
@@ -73,7 +67,7 @@ class AzureOpenAIService {
   private async *streamFromAzureOpenAI(
     messages: any[],
     videoId: string
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<StreamEvent> {
     console.log('🚀 [LLM] 開始 Azure OpenAI 串流請求');
     console.log('📋 [LLM] 請求配置:', {
       endpoint: config.azureOpenAI.endpoint,
@@ -131,9 +125,9 @@ class AzureOpenAIService {
 
       const decoder = new TextDecoder();
       let buffer = '';
-      let toolCallId = '';
-      let toolCallName = '';
-      let toolCallArgs = '';
+  let toolCallId = '';
+  let toolCallName = '';
+  let toolCallArgs = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -170,6 +164,9 @@ class AzureOpenAIService {
                   toolCallArgs += toolCall.function.arguments;
                   console.log('📝 [LLM] 累積工具參數:', toolCall.function.arguments);
                 }
+                // 在前端顯示工具調用開始與當前已知之參數（盡力解析）
+                const partialArgs = safeJsonParse(toolCallArgs || '{}', {});
+                yield { type: 'tool_call', status: 'start', name: toolCallName, args: partialArgs };
               }
 
               // 如果工具呼叫完成，執行工具並繼續對話
@@ -180,6 +177,9 @@ class AzureOpenAIService {
                 const args = safeJsonParse(toolCallArgs, {});
                 console.log('🔍 [LLM] 解析後的參數:', args);
                 
+                // 標記工具即將執行（end 狀態代表 LLM 端的工具呼叫結束，開始執行實際工具）
+                yield { type: 'tool_call', status: 'end', name: toolCallName, args };
+
                 const transcriptionResult = await this.callTranscriptionAPI(args.query || '', videoId);
                 
                 console.log('🔗 [LLM] 準備繼續對話，加入工具結果');
@@ -218,7 +218,7 @@ class AzureOpenAIService {
                 if (delta.content.length > 5) {
                   console.log('📝 [LLM] 接收內容片段:', delta.content.substring(0, 50) + '...');
                 }
-                yield delta.content;
+                yield { type: 'text', content: delta.content };
               }
             } catch (e) {
               console.error('❌ [LLM] 解析 SSE 資料失敗:', e);
@@ -230,35 +230,11 @@ class AzureOpenAIService {
     } catch (error) {
       console.error('💥 [LLM] Azure OpenAI API 呼叫失敗:', error);
       console.log('🔄 [LLM] 返回錯誤訊息給用戶');
-      yield `抱歉，處理您的問題時發生錯誤。請稍後再試。`;
+  yield { type: 'text', content: `抱歉，處理您的問題時發生錯誤。請稍後再試。` };
     }
   }
 
-  // Mock 的串流回應
-  private async *mockStream(question: string): AsyncGenerator<string> {
-    console.log('🎭 [Mock] 使用 Mock 模式回應問題:', question);
-    
-    const mockResponses = [
-      '根據影片內容，主角在第十分鐘時正在討論關於人工智慧的發展趨勢。',
-      '影片中提到了機器學習的三個主要類型：監督學習、無監督學習和強化學習。',
-      '在影片的這個部分，講者強調了數據品質對 AI 模型訓練的重要性。',
-      '主角解釋了深度學習與傳統機器學習的差異，特別是在特徵提取方面。',
-      '影片內容顯示，這項技術將在未來五年內對多個行業產生重大影響。'
-    ];
 
-    const response = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-    console.log('📝 [Mock] 選中的回應:', response);
-    console.log('⏱️ [Mock] 開始串流，延遲:', config.mock.streamingDelayMs + 'ms');
-    
-    const chars = response.split('');
-
-    for (const char of chars) {
-      await delay(config.mock.streamingDelayMs); // 使用配置的延遲時間
-      yield char;
-    }
-    
-    console.log('✅ [Mock] 串流完成');
-  }
 
   private async fetchRelevantChunks(question: string, videoId: string): Promise<string[]> {
     const response = await fetch(appConfig.videoProcessorAPI.queryEndpoint, {
@@ -284,23 +260,17 @@ class AzureOpenAIService {
     question: string,
     videoId: string,
     chatHistory: ChatMessage[] = []
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<StreamEvent> {
     console.log('🎤 [主程序] 用戶提問:', question);
     console.log('🎬 [主程序] 影片 ID:', videoId);
     console.log('💬 [主程序] 聊天歷史長度:', chatHistory.length);
-    console.log('⚙️ [主程序] 使用真實 OpenAI:', config.features.enableRealOpenAI);
-    console.log('🔑 [主程序] 有 API Key:', !!config.azureOpenAI.apiKey);
+  console.log('⚙️ [主程序] 僅使用真實 OpenAI');
+  console.log('🔑 [主程序] 有 API Key:', !!config.azureOpenAI.apiKey);
     
-    const systemMessage = {
+  const systemMessage = {
       role: 'system',
-      content: '你是一個專業的影片內容分析助手。你可以根據用戶的問題，使用提供的工具查詢相關的影片轉錄內容，然後給出準確且有幫助的回答。請用繁體中文回應。'
+      content: '你是一個專業的影片內容分析助手。你可以根據用戶的問題，使用提供的工具查詢相關的影片轉錄內容，然後給出準確且有幫助的回答。請用繁體中文回應。請注意，當你使用工具時，你需要在回答中包含你所引用的影片內容時間戳。'
     };
-
-    // 🔍 取得相關影片內容片段
-    // const relatedChunks = await this.fetchRelevantChunks(question, videoId);
-    // const contextText = relatedChunks.length > 0
-    //   ? `以下是從影片檢索到的相關內容：\n\n${relatedChunks.join('\n\n')}`
-    //   : '⚠️ 無法從影片中檢索到相關內容，請確認影片是否已被索引。';
 
     const messages = [
       systemMessage,
@@ -322,13 +292,8 @@ class AzureOpenAIService {
 
     console.log('📋 [主程序] 準備發送的訊息數量:', messages.length);
 
-    if (config.features.enableRealOpenAI && config.azureOpenAI.apiKey) {
-      console.log('🌐 [主程序] 使用真實 Azure OpenAI 服務');
-      yield* this.streamFromAzureOpenAI(messages, videoId);
-    } else {
-      console.log('🎭 [主程序] 使用 Mock 服務');
-      yield* this.mockStream(question);
-    }
+  // 一律使用真實 Azure OpenAI 服務
+  yield* this.streamFromAzureOpenAI(messages, videoId);
     
     console.log('🏁 [主程序] 問答流程結束');
   }

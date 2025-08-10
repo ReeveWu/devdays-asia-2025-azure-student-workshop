@@ -26,18 +26,7 @@ export const config = {
     queryEndpoint: process.env.REACT_APP_VIDEO_PROCESSOR_QUERY_ENDPOINT || 'https://video-processor-dubbgcc2dsf4g7hc.swedencentral-01.azurewebsites.net/api/query_video',
   },
   
-  // 開發模式開關
-  features: {
-    enableRealStorageUpload: process.env.REACT_APP_ENABLE_REAL_STORAGE_UPLOAD === 'true',
-    enableRealOpenAI: process.env.REACT_APP_ENABLE_REAL_OPENAI === 'true',
-    enableRealTranscriptionAPI: process.env.REACT_APP_ENABLE_REAL_TRANSCRIPTION_API === 'true',
-    enableRealVideoProcessing: process.env.REACT_APP_ENABLE_REAL_VIDEO_PROCESSING === 'true',
-  },
-  
-  // Mock 配置
-  mock: {
-    delayMs: parseInt(process.env.REACT_APP_MOCK_DELAY_MS || '1000'),
-  },
+  // 已移除開發模式與 mock 設定，僅保留真實 API 設定
 };
 
 // 支援的影片格式

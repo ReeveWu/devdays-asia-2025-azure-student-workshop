@@ -57,6 +57,11 @@ export interface OpenAIResponse {
   choices: OpenAIChoice[];
 }
 
+// 串流事件（支援一般文字與工具調用狀態）
+export type StreamEvent =
+  | { type: 'text'; content: string }
+  | { type: 'tool_call'; status: 'start' | 'end'; name: string; args?: any };
+
 // 轉錄查詢請求介面
 export interface TranscriptionQuery {
   query: string;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Input, Button, List, Avatar, Typography, message, Empty, Spin } from 'antd';
+import { Card, Input, Button, Avatar, Typography, message, Empty, Spin } from 'antd';
 import { SendOutlined, UserOutlined, RobotOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ChatMessage, VideoInfo } from '../types';
 import { generateId } from '../utils/helpers';
@@ -17,6 +17,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<ChatMessage | null>(null);
+  const [toolStatus, setToolStatus] = useState<null | { name: string; args?: any; phase: 'start' | 'end' }>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 自動滾動到底部（僅在新訊息時滾動）
@@ -93,19 +94,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
       let fullContent = '';
       let updateCount = 0;
       
-      for await (const chunk of stream) {
-        fullContent += chunk;
-        updateCount++;
-        
-        // 更頻繁地更新 UI，每個字元都更新
-        setStreamingMessage(prev => prev ? {
-          ...prev,
-          content: fullContent
-        } : null);
-        
-        // 每 5 個字元或每 100ms 強制更新一次，確保流暢性
-        if (updateCount % 5 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 10));
+    for await (const event of stream) {
+        if (event.type === 'text') {
+      // 一旦回到文字串流，清除工具狀態（避免與下方 AI 回應中同時顯示）
+      setToolStatus(prev => (prev ? null : prev));
+          fullContent += event.content;
+          updateCount++;
+
+          setStreamingMessage(prev => prev ? {
+            ...prev,
+            content: fullContent
+          } : null);
+
+          if (updateCount % 5 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+        } else if (event.type === 'tool_call') {
+          // 在 UI 顯示工具調用的狀態與查詢參數
+          setToolStatus({ name: event.name, args: event.args, phase: event.status });
         }
       }
 
@@ -117,11 +123,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
       };
 
       setMessages(prev => [...prev, finalMessage]);
-      setStreamingMessage(null);
+  setStreamingMessage(null);
+  setToolStatus(null);
     } catch (error) {
       console.error('發送訊息失敗:', error);
       message.error('發送訊息失敗，請稍後再試');
-      setStreamingMessage(null);
+  setStreamingMessage(null);
+  setToolStatus(null);
     } finally {
       setIsLoading(false);
     }
@@ -327,7 +335,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedVideo }) => {
                 {allMessages.map(renderMessage)}
               </div>
             )}
-            {streamingMessage?.isStreaming && (
+            {toolStatus && (
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-start',
+                margin: '0 0 12px 0',
+                padding: '0 24px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(255, 215, 0, 0.08)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 215, 0, 0.25)'
+                }}>
+                  <Spin size="small" />
+                  <Text type="secondary" style={{ fontSize: '13px' }}>
+                    工具 {toolStatus.name} {toolStatus.phase === 'start' ? '正在準備…' : '已啟動，執行中…'}
+                    {toolStatus?.args?.query ? `（查詢：${toolStatus.args.query}）` : ''}
+                  </Text>
+                </div>
+              </div>
+            )}
+            {streamingMessage?.isStreaming && !toolStatus && (
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'flex-start',
