@@ -141,7 +141,7 @@ def delete_documents_by_video_name(video_name: str):
 
 from typing import List, Dict, Any
 from azure.core.exceptions import HttpResponseError
-from azure.search.documents.models import VectorizedQuery
+from azure.search.documents.models import VectorizableTextQuery
 
 def _escape_odata_literal(s: str) -> str:
     # OData 單引號要重複一次：O'Reilly -> 'O''Reilly'
@@ -154,8 +154,7 @@ def query_video_segments_by_video(
 ) -> List[Dict[str, Any]]:
     FIELDS = ["chunk_id", "id", "video_name", "text", "start_time", "end_time"]
 
-    question_vector = embed_text(question)
-    vq = VectorizedQuery(vector=question_vector, k_nearest_neighbors=top_base * 3, fields="vector")
+    vq = VectorizableTextQuery(text=question, k_nearest_neighbors=top_base * 3, fields="vector")
 
     filter_expr = f"video_name eq '{_escape_odata_literal(video_name)}'"
 
