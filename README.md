@@ -1,129 +1,149 @@
 # devdays-asia-2025-azure-student-workshop
 
-## Project Overview
+Build a video Q&A experience on Azure: upload videos to Blob Storage, auto-transcribe with Azure AI Services (Speech), chunk and embed with Azure OpenAI, index into Azure AI Search (vector + keyword), and query via an Azure Functions backend. A React frontend consumes the APIs. This guide focuses on the backend; detailed frontend setup will be added later.
 
-This repository contains the code and resources for the DevDays Asia 2025 student workshop, focusing on building AI applications using Azure services. The workshop covers various topics, including Azure OpenAI, Azure Cognitive Search, and more.
+## Architecture
 
-## Azure Pre-requisites
+![Indexing Pipeline](./asset/architecture.png)
 
-- Subscription
-- AI foundry project
-- Search Service (Free or Standard tier)
-- Azure OpenAI (with `text-embedding-3-large` model deployed)
-- Storage account (with a container named `videos`)
-- Function App (Flex Consumption plan with Python runtime)
+- Storage: Raw videos live in a Blob container named `videos`.
+- Function App (Python):
+   - /api/index_video — fetches a blob, submits it to fast transcription, chunks transcript, embeds, and indexes into AI Search.
+   - /api/delete_video — removes all indexed chunks for a given video.
+   - /api/query_video — retrieval over the indexed chunks for a specific video and returns stitched context.
+- Azure AI Services (Speech): Fast transcription API.
+- Azure OpenAI: Embeddings for vector search.
+- Azure AI Search: Vector index with HNSW + Azure OpenAI vectorizer.
 
-## System Architecture (Indexing Pipeline)
+## Repository layout
 
-![System Architecture](./asset/indexing_pipeline.png)
+- backend/
+   - function_app/ — Azure Functions (HTTP triggers, Python)
+   - create_index/ — Script to create/update the AI Search index
+   - functionapp.sh — Deploys function app and sets app settings + CORS
+   - storage.sh — Configures Blob public access and CORS
+   - index.sh — Exports env vars from YAML and creates the Search index
+   - config.template.yaml — Copy to config.yaml and fill in your values
+- frontend/ — React app (consumes the backend APIs; details later)
+- asset/ — Architecture diagram
 
-## Setup Instructions
+## Azure resources required
 
-1. **Clone the repository**:
-   ```bash
-   git clone git@github.com:ReeveWu/devdays-asia-2025-azure-student-workshop.git
-   cd devdays-asia-2025-student-workshop
-   ```
-2. **Create a Python virtual environment**:
-   ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-   ```
+- Azure subscription and resource group
+- Azure Storage account with a container named `videos`
+- Azure AI Services (Speech) resource (for transcription)
+- Azure OpenAI resource with an embeddings deployment
+   - Model: text-embedding-3-large (3072 dims) or compatible
+- Azure AI Search service (Free or higher), with vector search enabled
+- Azure Functions app (Python) on a supported plan (e.g., Flex Consumption)
 
-## Create Function App
+## Configure the project (backend)
 
-- Navigate to the `backend` directory:
-  ```bash
-  cd backend
-  ```
-- Set up the environment variables in Azure Function App (Refer to `config.template.yaml`):
+1) Create your configuration file from the template and edit values:
 
-  - `aiService.name`: Name of the AI Service (AI Foundry project).
-  - `aiService.subscriptionKey`: Subscription key for the AI service.
-- Create a `config.yaml` file based on the `config.template.yaml` and fill in the required values:
-  ```bash
-  cp config.template.yaml config.yaml
-  ```
-- Deploy the Function App:
-  > [!NOTE]
-  >
-  > If you haven't installed azure and logged in, please install and log in first.
-  >
-  > If you are using Ubuntu, please follow the steps below:
-  > 
-  > - Install prerequisite packages
-  > 
-  >   ```bash
-  >   sudo apt install ca-certificates curl apt-transport-https lsb-release gnupg
-  >   ```
-  > 
-  > - Import the Microsoft signing key
-  > 
-  >   ```bash
-  >   curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
-  >   ```
-  > - Add the Azure CLI software repository
-  > 
-  >   ```bash
-  >   AZ_REPO=$(lsb_release -cs)
-  >   ```
-  >   ```bash
-  >   echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-  >   ```
-  > 
-  > - Update and install the Azure CLI
-  >   ```bash
-  >   sudo apt update
-  >   ```
-  >   ```bash
-  >   sudo apt install azure-cli
-  >   ```
-  > 
-  > - Check whether the installation is successful
-  > 
-  >   ```bash
-  >   az version
-  >   ```
-  > 
-  > - Login
-  >   ```bash
-  >   az login
-  >   ```
-  >   Or, If you cannot open browser in the OS (like using WSL or remoting without UI), you should use the command below:
-  >   
-  >   ```bash
-  >   az login --use-device-code
-  >   ```
-  >   Then, you can open the web URL using any device with any OS and insert the device code which you just got.
+```bash
+cd backend
+cp config.template.yaml config.yaml
+```
 
-  (If needed) Install necessary packages:
-  ```bash
-  sudo apt update | sudo apt install zip
-  ```
+Key fields in `backend/config.yaml` map to runtime environment variables used by the code:
 
-  Run the command to deploy function app to Azure Portal.
-  ```bash
-  ./deploy.sh
-  ```
+- openAI: endpoint, apiKey, embeddingModelName, embeddingDeploymentName, embeddingDimensions
+- aiService: name (the AI Services/Speech resource name), subscriptionKey
+- searchService: name, clientKey, indexName
+- storage: accountName, blobContainerName, connectionString
+- functionApp: name — used by the deploy script
 
-## Create Indexing Pipeline (I think this should be removed)
+Notes
+- Do not commit secrets (api keys, connection strings). The template is safe to commit; your `config.yaml` is not.
+- Ensure the embeddingDimensions matches the embedding model (3072 for text-embedding-3-large).
 
-- Install the required packages:
-  ```bash
-  pip install -r function_app/requirements.txt
-  ```
-- Navigate to the `create_indexing_pipeline` directory:
-  ```bash
-  cd create_indexing_pipeline
-  ```
-- Create a `.env` file based on the `.env.template` and fill in the required values:
-  ```bash
-  cp .env.template .env
-  ```
-- Ensure you have the necessary Azure credentials set up in the `.env` file.
-- Run the Jupyter notebook `create_aisearch.ipynb` to create the indexing pipeline.
+## Provision and configure (scripts)
 
-## Next Steps
+All scripts read from `backend/config.yaml` and use Azure CLI under the hood. Make sure you are logged in to the correct subscription with Azure CLI before running them.
 
-- Upload videos to the `videos` container in your Azure Storage account.
-- Trigger the indexing pipeline to process the videos and create searchable content by running the AI Search Indexer.
+1) Create or update the Azure AI Search index
+
+```bash
+bash ./index.sh
+```
+
+What it does
+- Exports environment variables from `config.yaml`.
+- Installs Python deps for the index script.
+- Creates/updates the index with fields: `chunk_id` (key), `id`, `video_name`, `text`, `start_time`, `end_time`, and `vector` (dims per your config).
+
+2) Deploy the Azure Functions backend and set app settings
+
+```bash
+bash ./functionapp.sh
+```
+
+What it does
+- Sets application settings for the function app (OpenAI, Search, Storage, Speech keys and endpoints).
+- Zips and deploys `backend/function_app` code.
+- Configures permissive CORS for demo purposes. For production, restrict origins explicitly.
+
+3) Configure Storage access and CORS for the `videos` container
+
+```bash
+bash ./storage.sh
+```
+
+What it does
+- Enables public blob access on the storage account.
+- Sets container access level and CORS for basic browser access. For production, prefer signed URLs or identities.
+
+
+## API reference (backend)
+
+Base URL: https://<your-function-app>.azurewebsites.net
+
+1) Index a video
+- POST /api/index_video
+- Body: { "video_name": "How to remix with Sora.mp4" }
+- Behavior: Downloads from Blob, sends to transcription, chunks and embeds, uploads chunks to AI Search.
+- Response: { "status": "Video indexed successfully" }
+
+2) Delete a video’s indexed chunks
+- POST /api/delete_video
+- Body: { "video_name": "How to remix with Sora.mp4" }
+- Response: { "status": "Documents deleted successfully" }
+
+3) Query a specific video’s transcript
+- POST /api/query_video
+- Body: { "query": "What are the steps?", "videoId": "How to remix with Sora.mp4" }
+- Response: { "text": "Here are the transcript segments..." }
+
+Example requests (replace placeholders)
+
+```bash
+# Index
+curl -sS -X POST \
+   "$FUNCTION_BASE/api/index_video" \
+   -H 'Content-Type: application/json' \
+   -d '{"video_name":"<video_name>"}'
+
+# Query
+curl -sS -X POST \
+   "$FUNCTION_BASE/api/query_video" \
+   -H 'Content-Type: application/json' \
+   -d '{"query":"<query>","videoId":"<video_name>"}'
+
+# Delete
+curl -sS -X POST \
+   "$FUNCTION_BASE/api/delete_video" \
+   -H 'Content-Type: application/json' \
+   -d '{"video_name": "<video_name>"}'
+```
+
+## Frontend
+
+The React app lives in `frontend/` and consumes the three backend endpoints listed above. Detailed setup and environment variables for the frontend will be provided later.
+
+
+## License
+
+This workshop code is provided for educational and demonstration purposes. A formal license may be added to the repository; until then, verify terms of use for any incorporated services and dependencies before production use.
+
+
