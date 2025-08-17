@@ -1,6 +1,5 @@
 import { ChatMessage, StreamEvent } from '../types';
 import { safeJsonParse } from '../utils/helpers';
-import { config as appConfig } from '../utils/config';
 
 declare const process: any;
 
@@ -143,7 +142,12 @@ class AzureOpenAIService {
             if (data === '[DONE]') continue;
 
             try {
-              const parsed = JSON.parse(data);
+              const parsed = safeJsonParse(data, null);
+              if (!parsed) {
+                console.warn('⚠️ [LLM] 無法解析 SSE 資料，跳過:', data.substring(0, 100));
+                continue;
+              }
+              
               const choice = parsed.choices?.[0];
               if (!choice) continue;
 
@@ -232,27 +236,6 @@ class AzureOpenAIService {
       console.log('🔄 [LLM] 返回錯誤訊息給用戶');
   yield { type: 'text', content: `抱歉，處理您的問題時發生錯誤。請稍後再試。` };
     }
-  }
-
-
-
-  private async fetchRelevantChunks(question: string, videoId: string): Promise<string[]> {
-    const response = await fetch(appConfig.videoProcessorAPI.queryEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, video_name: videoId })
-    });
-
-    if (!response.ok) {
-      console.error('❌ 無法取得相關內容:', response.statusText);
-      return [];
-    }
-
-    const data = await response.json();
-    return (data.chunks || []).map(
-      (chunk: { video_name: string, start_time: string, end_time: string, text: string }) =>
-        `[${chunk.video_name} | ${chunk.start_time} - ${chunk.end_time}]\n${chunk.text}`
-    );
   }
 
   // 發送問題並取得串流回應

@@ -65,9 +65,19 @@ export const delay = (ms: number): Promise<void> => {
 // 安全的 JSON 解析
 export const safeJsonParse = (jsonString: string, fallback: any = null): any => {
   try {
+    // 檢查是否為空字串或只有空白字符
+    if (!jsonString || !jsonString.trim()) {
+      return fallback;
+    }
     return JSON.parse(jsonString);
   } catch (error) {
-    console.error('JSON 解析錯誤:', error);
+    // 只在開發模式下顯示詳細錯誤
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('JSON 解析警告:', {
+        error: error,
+        input: jsonString.substring(0, 100) + (jsonString.length > 100 ? '...' : '')
+      });
+    }
     return fallback;
   }
 };
