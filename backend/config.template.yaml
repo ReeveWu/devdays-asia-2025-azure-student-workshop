@@ -4,15 +4,13 @@ azure:
   functionApp:
     name: <function-app-name>
     zipFile: function_app.zip
-  openAI:
-    endpoint: https://<service_name>.openai.azure.com
-    apiKey: <api-key>
-    embeddingModelName: text-embedding-3-large
-    embeddingDeploymentName: text-embedding-3-large
-    embeddingDimensions: 3072
   aiService:
     name: <ai-service-name>
     subscriptionKey: <subscription-key>
+    openAI:
+      embeddingModelName: text-embedding-3-large
+      embeddingDeploymentName: text-embedding-3-large
+      embeddingDimensions: 3072
   searchService:
     name: <search-service-name>
     clientKey: <client-key>

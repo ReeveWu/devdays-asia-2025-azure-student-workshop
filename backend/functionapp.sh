@@ -33,11 +33,11 @@ echo "Updating function app environment variables..."
 az functionapp config appsettings set \
   --name "$config_azure_functionApp_name" \
   --resource-group "$config_azure_resourceGroup_name" \
-  --settings AZURE_OPENAI_ENDPOINT="$config_azure_openAI_endpoint" \
-              AZURE_OPENAI_API_KEY="$config_azure_openAI_apiKey" \
-              AZURE_OPENAI_EMBEDDING_MODEL_NAME="$config_azure_openAI_embeddingModelName" \
-              AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME="$config_azure_openAI_embeddingDeploymentName" \
-              AZURE_OPENAI_EMBEDDING_DIMENSIONS="$config_azure_openAI_embeddingDimensions" \
+  --settings AZURE_OPENAI_ENDPOINT="https://$config_azure_aiService_name.openai.azure.com" \
+              AZURE_OPENAI_API_KEY="$config_azure_aiService_subscriptionKey" \
+              AZURE_OPENAI_EMBEDDING_MODEL_NAME="$config_azure_aiService_openAI_embeddingModelName" \
+              AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME="$config_azure_aiService_openAI_embeddingDeploymentName" \
+              AZURE_OPENAI_EMBEDDING_DIMENSIONS="$config_azure_aiService_openAI_embeddingDimensions" \
               STORAGE_CONNECTION_STRING="$config_azure_storage_connectionString" \
               BLOB_CONTAINER_NAME="$config_azure_storage_blobContainerName" \
               AI_FOUNDRY_NAME="$config_azure_aiService_name" \

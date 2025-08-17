@@ -38,11 +38,11 @@ eval $(parse_yaml "$CONFIG_FILE" "config_")
 # Map YAML values to environment variables expected by the Python script
 export SEARCH_SERVICE_NAME="${config_azure_searchService_name:-}"
 export SEARCH_CLIENT_KEY="${config_azure_searchService_clientKey:-}"
-export AZURE_OPENAI_RESOURCE_URL="${config_azure_openAI_endpoint:-}"
-export AZURE_OPENAI_API_KEY="${config_azure_openAI_apiKey:-}"
-export AZURE_OPENAI_EMBEDDING_MODEL_NAME="${config_azure_openAI_embeddingModelName:-}"
-export AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME="${config_azure_openAI_embeddingDeploymentName:-}"
-export AZURE_OPENAI_EMBEDDING_DIMENSIONS="${config_azure_openAI_embeddingDimensions:-3072}"
+export AZURE_OPENAI_RESOURCE_URL="https://${config_azure_aiService_name:-}.openai.azure.com"
+export AZURE_OPENAI_API_KEY="${config_azure_aiService_subscriptionKey:-}"
+export AZURE_OPENAI_EMBEDDING_MODEL_NAME="${config_azure_aiService_openAI_embeddingModelName:-}"
+export AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME="${config_azure_aiService_openAI_embeddingDeploymentName:-}"
+export AZURE_OPENAI_EMBEDDING_DIMENSIONS="${config_azure_aiService_openAI_embeddingDimensions:-3072}"
 export SEARCH_INDEX_NAME="${config_azure_searchService_indexName:-}"
 
 # Basic validation
