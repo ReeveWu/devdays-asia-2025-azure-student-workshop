@@ -1,11 +1,11 @@
 import { VideoInfo, UploadProgress } from '../types';
+import { getConfig, validateConfig, CONFIG_KEYS } from '../utils/config';
 
-declare const process: any;
-
+// 使用新的配置系統
 const cfg = {
-  accountName: process.env.REACT_APP_AZURE_STORAGE_ACCOUNT_NAME || '',
-  containerName: process.env.REACT_APP_AZURE_STORAGE_CONTAINER_NAME || 'videos',
-  sasToken: (process.env.REACT_APP_AZURE_STORAGE_SAS_TOKEN || '').replace(/"/g, ''),
+  accountName: getConfig('AZURE_STORAGE_ACCOUNT_NAME'),
+  containerName: getConfig('AZURE_STORAGE_CONTAINER_NAME') || 'videos',
+  sasToken: getConfig('AZURE_STORAGE_SAS_TOKEN').replace(/"/g, ''),
 };
 
 class AzureStorageService {
@@ -147,9 +147,9 @@ class AzureStorageService {
   }
 
   async indexVideo(videoName: string): Promise<void> {
-    const endpoint = process.env.REACT_APP_VIDEO_PROCESSOR_ENDPOINT;
+    const endpoint = getConfig('VIDEO_PROCESSOR_ENDPOINT');
     if (!endpoint) {
-      throw new Error('REACT_APP_VIDEO_PROCESSOR_ENDPOINT is not defined');
+      throw new Error('VIDEO_PROCESSOR_ENDPOINT is not defined');
     }
     const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, mode: 'cors', body: JSON.stringify({ video_name: videoName }) });
     if (!r.ok) { const t = await r.text(); throw new Error(`影片索引處理失敗: ${r.status} ${r.statusText} - ${t}`); }
@@ -157,9 +157,9 @@ class AzureStorageService {
   }
 
   async deleteVideoIndex(videoName: string): Promise<void> {
-    const deleteEndpoint = process.env.REACT_APP_VIDEO_PROCESSOR_DELETE_ENDPOINT;
+    const deleteEndpoint = getConfig('VIDEO_PROCESSOR_DELETE_ENDPOINT');
     if (!deleteEndpoint) {
-      throw new Error('REACT_APP_VIDEO_PROCESSOR_DELETE_ENDPOINT is not defined');
+      throw new Error('VIDEO_PROCESSOR_DELETE_ENDPOINT is not defined');
     }
     const r = await fetch(deleteEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, mode: 'cors', body: JSON.stringify({ video_name: videoName }) });
     if (!r.ok) { const t = await r.text(); throw new Error(`影片索引刪除失敗: ${r.status} ${r.statusText} - ${t}`); }

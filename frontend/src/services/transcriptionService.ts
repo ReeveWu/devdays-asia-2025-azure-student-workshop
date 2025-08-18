@@ -1,10 +1,9 @@
 import { TranscriptionQuery, TranscriptionResponse } from '../types';
-
-declare const process: any;
+import { getConfig } from '../utils/config';
 
 const config = {
   transcriptionAPI: {
-    endpoint: process.env.REACT_APP_VIDEO_PROCESSOR_QUERY_ENDPOINT,
+    endpoint: getConfig('VIDEO_PROCESSOR_QUERY_ENDPOINT'),
   },
   // 已移除 mock 與開發模式，僅保留真實 API 設定
 };

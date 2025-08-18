@@ -1,14 +1,13 @@
 import { ChatMessage, StreamEvent } from '../types';
 import { safeJsonParse } from '../utils/helpers';
-
-declare const process: any;
+import { getConfig } from '../utils/config';
 
 const config = {
   azureOpenAI: {
-    endpoint: process.env.REACT_APP_AZURE_OPENAI_ENDPOINT || '',
-    apiKey: process.env.REACT_APP_AZURE_OPENAI_API_KEY || '',
-    deploymentName: process.env.REACT_APP_AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4o',
-    apiVersion: process.env.REACT_APP_AZURE_OPENAI_API_VERSION || '2024-10-21',
+    endpoint: getConfig('AZURE_OPENAI_ENDPOINT'),
+    apiKey: getConfig('AZURE_OPENAI_API_KEY'),
+    deploymentName: getConfig('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4o',
+    apiVersion: getConfig('AZURE_OPENAI_API_VERSION') || '2024-10-21',
   },
   // 已移除 mock 與開發模式，僅保留真實 API 設定
 };
