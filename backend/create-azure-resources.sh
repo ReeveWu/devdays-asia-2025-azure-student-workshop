@@ -6,7 +6,6 @@
 set -e  # Exit on any error
 
 # Configuration
-DEFAULT_RESOURCE_GROUP="devwstest1"
 LOCATION="swedencentral"
 SUBSCRIPTION_ID=""  # Will be auto-detected
 
@@ -60,14 +59,8 @@ check_prerequisites() {
 get_resource_group_name() {
     echo ""
     print_status "Resource Group Configuration"
-    read -p "Enter resource group name (default: $DEFAULT_RESOURCE_GROUP): " INPUT_RG
-    
-    if [ -z "$INPUT_RG" ]; then
-        RESOURCE_GROUP_NAME="$DEFAULT_RESOURCE_GROUP"
-    else
-        RESOURCE_GROUP_NAME="$INPUT_RG"
-    fi
-    
+    read -p "Enter resource group name: " RESOURCE_GROUP_NAME
+
     print_status "Using resource group: $RESOURCE_GROUP_NAME"
 }
 
