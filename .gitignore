@@ -1,5 +1,6 @@
 .venv
 data/
 **/.env
+.DS_Store
 backend/.config.yaml
 backend/config.yaml
