@@ -1,9 +1,34 @@
 #!/bin/bash
 
-# Azure Resource Creation Script
-# This script creates Azure resources for the video processing application
+parse_yaml() {
+    local prefix=$2
+    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+    sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" $1 |
+    awk -F$fs '{
+        indent = length($1)/2;
+        vname[indent] = $2;
+        for (i in vname) {if (i > indent) {delete vname[i]}}
+        if (length($3) > 0) {
+            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+            printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+        }
+    }'
+}
 
-set -e  # Exit on any error
+# Check if Azure CLI is installed
+if ! command -v az &> /dev/null; then
+    echo "Error: Azure CLI is not installed"
+    exit 1
+fi
+
+# Check if config file exists
+CONFIG_FILE="config.yaml"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: $CONFIG_FILE not found"
+    exit 1
+fi
 
 # Configuration
 LOCATION="swedencentral"
@@ -59,24 +84,23 @@ check_prerequisites() {
 get_resource_group_name() {
     echo ""
     print_status "Resource Group Configuration"
-    read -p "Enter resource group name: " RESOURCE_GROUP_NAME
-
+    RESOURCE_GROUP_NAME=$config_azure_resourceGroup_name
     print_status "Using resource group: $RESOURCE_GROUP_NAME"
 }
 
 # Function to create resource group
-create_resource_group() {
-    print_status "Creating resource group: $RESOURCE_GROUP_NAME"
+# create_resource_group() {
+#     print_status "Creating resource group: $RESOURCE_GROUP_NAME"
     
-    if az group show --name "$RESOURCE_GROUP_NAME" &> /dev/null; then
-        print_warning "Resource group '$RESOURCE_GROUP_NAME' already exists"
-    else
-        az group create \
-            --name "$RESOURCE_GROUP_NAME" \
-            --location "$LOCATION"
-        print_success "Resource group created successfully"
-    fi
-}
+#     if az group show --name "$RESOURCE_GROUP_NAME" &> /dev/null; then
+#         print_warning "Resource group '$RESOURCE_GROUP_NAME' already exists"
+#     else
+#         az group create \
+#             --name "$RESOURCE_GROUP_NAME" \
+#             --location "$LOCATION"
+#         print_success "Resource group created successfully"
+#     fi
+# }
 
 # Function to create storage account
 create_storage_account() {
@@ -122,69 +146,69 @@ create_storage_account() {
 }
 
 # Function to create AI Search service
-create_ai_search() {
-    local search_name="${RESOURCE_GROUP_NAME}-search"
+# create_ai_search() {
+#     local search_name="${RESOURCE_GROUP_NAME}-search"
 
-    print_status "Creating AI Search service: $search_name"
+#     print_status "Creating AI Search service: $search_name"
     
-    az search service create \
-        --name "$search_name" \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --location "$LOCATION" \
-        --sku "basic" \
-        --partition-count 1 \
-        --replica-count 1
+#     az search service create \
+#         --name "$search_name" \
+#         --resource-group "$RESOURCE_GROUP_NAME" \
+#         --location "$LOCATION" \
+#         --sku "basic" \
+#         --partition-count 1 \
+#         --replica-count 1
     
-    print_success "AI Search service created successfully"
+#     print_success "AI Search service created successfully"
     
-    # Get admin key
-    local admin_key=$(az search admin-key show \
-        --service-name "$search_name" \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --query primaryKey -o tsv)
+#     # Get admin key
+#     local admin_key=$(az search admin-key show \
+#         --service-name "$search_name" \
+#         --resource-group "$RESOURCE_GROUP_NAME" \
+#         --query primaryKey -o tsv)
     
-    echo ""
-    print_status "AI Search Service Details:"
-    echo "  Name: $search_name"
-    echo "  Admin Key: $admin_key"
-    echo "  Search URL: https://$search_name.search.windows.net"
-}
+#     echo ""
+#     print_status "AI Search Service Details:"
+#     echo "  Name: $search_name"
+#     echo "  Admin Key: $admin_key"
+#     echo "  Search URL: https://$search_name.search.windows.net"
+# }
 
-# Function to create AI Foundry (Cognitive Services)
-create_ai_foundry() {
-    local ai_name="${RESOURCE_GROUP_NAME}-ai"
+# # Function to create AI Foundry (Cognitive Services)
+# create_ai_foundry() {
+#     local ai_name="${RESOURCE_GROUP_NAME}-ai"
     
-    print_status "Creating AI Foundry: $ai_name"
+#     print_status "Creating AI Foundry: $ai_name"
     
-    az cognitiveservices account create \
-    --name "$ai_name" \
-    --resource-group "$RESOURCE_GROUP_NAME" \
-    --kind AIServices \
-    --sku S0 \
-    --location "$LOCATION" \
-    --assign-identity \
-    --yes
+#     az cognitiveservices account create \
+#     --name "$ai_name" \
+#     --resource-group "$RESOURCE_GROUP_NAME" \
+#     --kind AIServices \
+#     --sku S0 \
+#     --location "$LOCATION" \
+#     --assign-identity \
+#     --yes
     
-    print_success "AI Foundry service created successfully"
+#     print_success "AI Foundry service created successfully"
     
-    # Get subscription key
-    local subscription_key=$(az cognitiveservices account keys list \
-        --name "$ai_name" \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --query key1 -o tsv)
+#     # Get subscription key
+#     local subscription_key=$(az cognitiveservices account keys list \
+#         --name "$ai_name" \
+#         --resource-group "$RESOURCE_GROUP_NAME" \
+#         --query key1 -o tsv)
     
-    # Get endpoint
-    local endpoint=$(az cognitiveservices account show \
-        --name "$ai_name" \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --query properties.endpoint -o tsv)
+#     # Get endpoint
+#     local endpoint=$(az cognitiveservices account show \
+#         --name "$ai_name" \
+#         --resource-group "$RESOURCE_GROUP_NAME" \
+#         --query properties.endpoint -o tsv)
     
-    echo ""
-    print_status "AI Foundry Service Details:"
-    echo "  Name: $ai_name"
-    echo "  Subscription Key: $subscription_key"
-    echo "  Endpoint: $endpoint"
-}
+#     echo ""
+#     print_status "AI Foundry Service Details:"
+#     echo "  Name: $ai_name"
+#     echo "  Subscription Key: $subscription_key"
+#     echo "  Endpoint: $endpoint"
+# }
 
 # Function to create Function App with Flex Consumption plan
 create_function_app() {
@@ -211,8 +235,8 @@ create_function_app() {
 # Function to output configuration template
 output_config_template() {
     local storage_name="${RESOURCE_GROUP_NAME}blob"
-    local search_name="${RESOURCE_GROUP_NAME}-search"
-    local ai_name="${RESOURCE_GROUP_NAME}-ai"
+    local search_name="${config_azure_searchService_name:-}"
+    local ai_name="${config_azure_aiService_name:-}"
     local function_name="${RESOURCE_GROUP_NAME}-func"
 
     # Get necessary keys and connection strings
@@ -238,7 +262,8 @@ output_config_template() {
     echo ""
     print_status "Updated config.yaml template:"
     echo ""
-    cat << EOF
+    # Create/update config.yaml with the generated values
+    cat << EOF > config.yaml
 azure:
   resourceGroup: 
     name: $RESOURCE_GROUP_NAME
@@ -261,6 +286,8 @@ azure:
     blobContainerName: videos
     connectionString: $storage_connection
 EOF
+    
+    print_success "Configuration written to config.yaml"
 }
 
 # Main execution
@@ -277,13 +304,12 @@ main() {
     print_status "Starting resource creation..."
     echo ""
     
-    create_resource_group
     create_storage_account
-    create_ai_search
-    create_ai_foundry
     create_function_app
-    
     output_config_template
+
+    bash create_ai_services.sh
+    bash function_app.sh
     
     echo ""
     print_success "Resource creation completed!"
