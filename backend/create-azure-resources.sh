@@ -30,9 +30,14 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
+# Load configuration from YAML file
+echo "Parsing configuration from $CONFIG_FILE..."
+eval $(parse_yaml $CONFIG_FILE "config_")
+
 # Configuration
-LOCATION="swedencentral"
-SUBSCRIPTION_ID=""  # Will be auto-detected
+LOCATION="westus2"
+read -p "Enter resource group name: " RESOURCE_GROUP_NAME
+read -p "Enter AI service name: " AI_SERVICE_NAME
 
 # Colors for output
 RED='\033[0;31m'
@@ -58,49 +63,35 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to check if Azure CLI is installed and user is logged in
-check_prerequisites() {
-    print_status "Checking prerequisites..."
-    
-    # Check if Azure CLI is installed
-    if ! command -v az &> /dev/null; then
-        print_error "Azure CLI is not installed. Please install it first."
-        print_status "Install Azure CLI: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
-        exit 1
-    fi
-    
-    # Check if user is logged in
-    if ! az account show &> /dev/null; then
-        print_error "Not logged in to Azure. Please run 'az login' first."
-        exit 1
-    fi
-    
-    # Get current subscription
-    SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-    print_success "Using subscription: $SUBSCRIPTION_ID"
-}
+# Function to create AI Search service
+create_ai_search() {
+    local search_name="${RESOURCE_GROUP_NAME}-search"
 
-# Function to get resource group name
-get_resource_group_name() {
+    print_status "Creating AI Search service: $search_name"
+    
+    az search service create \
+        --name "$search_name" \
+        --resource-group "$RESOURCE_GROUP_NAME" \
+        --location "$LOCATION" \
+        --sku "basic" \
+        --partition-count 1 \
+        --replica-count 1
+    
+    print_success "AI Search service created successfully"
+    
+    # Get admin key
+    local admin_key=$(az search admin-key show \
+        --service-name "$search_name" \
+        --resource-group "$RESOURCE_GROUP_NAME" \
+        --query primaryKey -o tsv)
+    
     echo ""
-    print_status "Resource Group Configuration"
-    RESOURCE_GROUP_NAME=$config_azure_resourceGroup_name
-    print_status "Using resource group: $RESOURCE_GROUP_NAME"
+    print_status "AI Search Service Details:"
+    echo "  Name: $search_name"
+    echo "  Admin Key: $admin_key"
+    echo "  Search URL: https://$search_name.search.windows.net"
 }
 
-# Function to create resource group
-# create_resource_group() {
-#     print_status "Creating resource group: $RESOURCE_GROUP_NAME"
-    
-#     if az group show --name "$RESOURCE_GROUP_NAME" &> /dev/null; then
-#         print_warning "Resource group '$RESOURCE_GROUP_NAME' already exists"
-#     else
-#         az group create \
-#             --name "$RESOURCE_GROUP_NAME" \
-#             --location "$LOCATION"
-#         print_success "Resource group created successfully"
-#     fi
-# }
 
 # Function to create storage account
 create_storage_account() {
@@ -145,75 +136,11 @@ create_storage_account() {
     echo "  Connection String: $connection_string"
 }
 
-# Function to create AI Search service
-# create_ai_search() {
-#     local search_name="${RESOURCE_GROUP_NAME}-search"
-
-#     print_status "Creating AI Search service: $search_name"
-    
-#     az search service create \
-#         --name "$search_name" \
-#         --resource-group "$RESOURCE_GROUP_NAME" \
-#         --location "$LOCATION" \
-#         --sku "basic" \
-#         --partition-count 1 \
-#         --replica-count 1
-    
-#     print_success "AI Search service created successfully"
-    
-#     # Get admin key
-#     local admin_key=$(az search admin-key show \
-#         --service-name "$search_name" \
-#         --resource-group "$RESOURCE_GROUP_NAME" \
-#         --query primaryKey -o tsv)
-    
-#     echo ""
-#     print_status "AI Search Service Details:"
-#     echo "  Name: $search_name"
-#     echo "  Admin Key: $admin_key"
-#     echo "  Search URL: https://$search_name.search.windows.net"
-# }
-
-# # Function to create AI Foundry (Cognitive Services)
-# create_ai_foundry() {
-#     local ai_name="${RESOURCE_GROUP_NAME}-ai"
-    
-#     print_status "Creating AI Foundry: $ai_name"
-    
-#     az cognitiveservices account create \
-#     --name "$ai_name" \
-#     --resource-group "$RESOURCE_GROUP_NAME" \
-#     --kind AIServices \
-#     --sku S0 \
-#     --location "$LOCATION" \
-#     --assign-identity \
-#     --yes
-    
-#     print_success "AI Foundry service created successfully"
-    
-#     # Get subscription key
-#     local subscription_key=$(az cognitiveservices account keys list \
-#         --name "$ai_name" \
-#         --resource-group "$RESOURCE_GROUP_NAME" \
-#         --query key1 -o tsv)
-    
-#     # Get endpoint
-#     local endpoint=$(az cognitiveservices account show \
-#         --name "$ai_name" \
-#         --resource-group "$RESOURCE_GROUP_NAME" \
-#         --query properties.endpoint -o tsv)
-    
-#     echo ""
-#     print_status "AI Foundry Service Details:"
-#     echo "  Name: $ai_name"
-#     echo "  Subscription Key: $subscription_key"
-#     echo "  Endpoint: $endpoint"
-# }
 
 # Function to create Function App with Flex Consumption plan
 create_function_app() {
     local function_name="${RESOURCE_GROUP_NAME}-func"
-    local storage_name="${RESOURCE_GROUP_NAME}blob"   # 這要和 create_storage_account 同名
+    local storage_name="${RESOURCE_GROUP_NAME}blob"
 
     print_status "Creating Function App (Flex Consumption, Python 3.12): $function_name"
 
@@ -234,9 +161,9 @@ create_function_app() {
 
 # Function to output configuration template
 output_config_template() {
+    local ai_name="${AI_SERVICE_NAME}"
     local storage_name="${RESOURCE_GROUP_NAME}blob"
-    local search_name="${config_azure_searchService_name:-}"
-    local ai_name="${config_azure_aiService_name:-}"
+    local search_name="${RESOURCE_GROUP_NAME}-search"
     local function_name="${RESOURCE_GROUP_NAME}-func"
 
     # Get necessary keys and connection strings
@@ -297,24 +224,28 @@ main() {
     echo "Location: $LOCATION"
     echo "=================================================="
     
-    check_prerequisites
-    get_resource_group_name
-    
     echo ""
     print_status "Starting resource creation..."
     echo ""
-    
+
+    create_ai_search
     create_storage_account
     create_function_app
+    
     output_config_template
 
-    bash create_ai_services.sh
-    bash function_app.sh
-    
-    echo ""
     print_success "Resource creation completed!"
-    print_warning "Please update your config.yaml with the values shown above."
-    print_warning "Note: You may need to create OpenAI deployments manually in Azure AI Foundry portal."
+
+    print_status "Creating AI Search Index..."
+    bash index.sh
+
+    print_status "Uploading Function Script..."
+    bash functionapp.sh
+
+    print_status "Setting CORS for Storage Account..."
+    bash storage.sh
+
+    print_success "All resources created successfully!"
 }
 
 # Run main function
