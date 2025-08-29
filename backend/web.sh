@@ -18,7 +18,7 @@ parse_yaml() {
 }
 
 # Check if Azure CLI is installed
-if ! command -v az &> /dev/null; then
+if ! command -v /bin/az &> /dev/null; then
     echo "Error: Azure CLI is not installed"
     exit 1
 fi
@@ -117,7 +117,7 @@ if [ ! -d "../frontend/build" ]; then
 fi
 
 echo "正在啟用 Azure Storage Static Website..."
-az storage blob service-properties update \
+/bin/az storage blob service-properties update \
   --account-name "$config_azure_storage_accountName" \
   --connection-string "$config_azure_storage_connectionString" \
   --static-website \
@@ -132,7 +132,7 @@ fi
 echo "✅ 成功啟用 Static Website"
 
 echo "正在上傳檔案到 Azure Storage..."
-az storage blob upload-batch \
+/bin/az storage blob upload-batch \
   --account-name "$config_azure_storage_accountName" \
   --connection-string "$config_azure_storage_connectionString" \
   --overwrite \
@@ -147,7 +147,7 @@ fi
 echo "✅ 檔案上傳成功"
 
 # 取得 Static Website URL
-WEBSITE_URL=$(az storage account show \
+WEBSITE_URL=$(/bin/az storage account show \
   --name "$config_azure_storage_accountName" \
   --resource-group "$config_azure_resourceGroup_name" \
   --query "primaryEndpoints.web" \

@@ -30,12 +30,12 @@ eval $(parse_yaml $CONFIG_FILE "config_")
 
 # Configure access policies for the storage account
 echo "Configuring access policies for the storage account..."
-# az storage account update \
+# /bin/az storage account update \
 #   --name "$config_azure_storage_accountName" \
 #   --resource-group "$config_azure_resourceGroup_name" \
 #   --allow-blob-public-access true
 
-# az storage container set-permission \
+# /bin/az storage container set-permission \
 #   --name "$config_azure_storage_blobContainerName" \
 #   --account-name "$config_azure_storage_accountName" \
 #   --public-access blob \
@@ -43,12 +43,12 @@ echo "Configuring access policies for the storage account..."
 
 # Configure CORS settings for the storage account
 echo "Configuring CORS settings for the storage account..."
-az storage cors clear \
+/bin/az storage cors clear \
   --services b \
   --account-name "$config_azure_storage_accountName" \
   --connection-string "$config_azure_storage_connectionString"
 
-az storage cors add \
+/bin/az storage cors add \
   --services b \
   --origins '*' \
   --methods GET PUT OPTIONS POST DELETE \

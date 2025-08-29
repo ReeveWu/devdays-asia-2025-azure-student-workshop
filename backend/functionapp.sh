@@ -30,7 +30,7 @@ eval $(parse_yaml $CONFIG_FILE "config_")
 
 # Update the function app environment variables
 echo "Updating function app environment variables..."
-az functionapp config appsettings set \
+/bin/az functionapp config appsettings set \
   --name "$config_azure_functionApp_name" \
   --resource-group "$config_azure_resourceGroup_name" \
   --settings AZURE_OPENAI_ENDPOINT="https://$config_azure_aiService_name.openai.azure.com" \
@@ -54,7 +54,7 @@ cd ..
 
 # Deploy the function app
 echo "Deploying function app (It may take a while)..."
-az functionapp deployment source config-zip \
+/bin/az functionapp deployment source config-zip \
   --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --src "$config_azure_functionApp_zipFile"
@@ -63,12 +63,12 @@ rm -rf "$config_azure_functionApp_zipFile"
 
 # Configure CORS settings for the function app
 echo "Configuring CORS settings for the function app..."
-az functionapp cors remove \
+/bin/az functionapp cors remove \
   --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --allowed-origins
 
-az functionapp cors add \
+/bin/az functionapp cors add \
   --resource-group "$config_azure_resourceGroup_name" \
   --name "$config_azure_functionApp_name" \
   --allowed-origins '*'

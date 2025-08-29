@@ -1,41 +1,13 @@
 #!/bin/bash
 
-parse_yaml() {
-    local prefix=$2
-    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-    sed -ne "s|^\($s\):|\1|" \
-        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p" $1 |
-    awk -F$fs '{
-        indent = length($1)/2;
-        vname[indent] = $2;
-        for (i in vname) {if (i > indent) {delete vname[i]}}
-        if (length($3) > 0) {
-            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-            printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-        }
-    }'
-}
-
 # Check if Azure CLI is installed
-if ! command -v az &> /dev/null; then
+if ! command -v /bin/az &> /dev/null; then
     echo "Error: Azure CLI is not installed"
     exit 1
 fi
 
-# Check if config file exists
-CONFIG_FILE="config.yaml"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Error: $CONFIG_FILE not found"
-    exit 1
-fi
-
-# Load configuration from YAML file
-echo "Parsing configuration from $CONFIG_FILE..."
-eval $(parse_yaml $CONFIG_FILE "config_")
-
 # Configuration
-LOCATION="westus2"
+LOCATION="eastus2"
 read -p "Enter resource group name: " RESOURCE_GROUP_NAME
 read -p "Enter AI service name: " AI_SERVICE_NAME
 
@@ -69,7 +41,7 @@ create_ai_search() {
 
     print_status "Creating AI Search service: $search_name"
     
-    az search service create \
+    /bin/az search service create \
         --name "$search_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --location "$LOCATION" \
@@ -80,7 +52,7 @@ create_ai_search() {
     print_success "AI Search service created successfully"
     
     # Get admin key
-    local admin_key=$(az search admin-key show \
+    local admin_key=$(/bin/az search admin-key show \
         --service-name "$search_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --query primaryKey -o tsv)
@@ -100,7 +72,7 @@ create_storage_account() {
     print_status "Creating storage account: $storage_name"
     
     # Create storage account
-    az storage account create \
+    /bin/az storage account create \
         --name "$storage_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --location "$LOCATION" \
@@ -115,13 +87,13 @@ create_storage_account() {
     print_status "Creating blob container: videos"
     
     # Get storage account connection string
-    local connection_string=$(az storage account show-connection-string \
+    local connection_string=$(/bin/az storage account show-connection-string \
         --name "$storage_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --query connectionString -o tsv)
     
     # Create container
-    az storage container create \
+    /bin/az storage container create \
         --name "videos" \
         --connection-string "$connection_string" \
         --public-access off
@@ -144,7 +116,7 @@ create_function_app() {
 
     print_status "Creating Function App (Flex Consumption, Python 3.12): $function_name"
 
-    az functionapp create \
+    /bin/az functionapp create \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --name "$function_name" \
         --storage-account "$storage_name" \
@@ -167,17 +139,17 @@ output_config_template() {
     local function_name="${RESOURCE_GROUP_NAME}-func"
 
     # Get necessary keys and connection strings
-    local storage_connection=$(az storage account show-connection-string \
+    local storage_connection=$(/bin/az storage account show-connection-string \
         --name "$storage_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --query connectionString -o tsv)
     
-    local search_key=$(az search admin-key show \
+    local search_key=$(/bin/az search admin-key show \
         --service-name "$search_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --query primaryKey -o tsv)
     
-    local ai_key=$(az cognitiveservices account keys list \
+    local ai_key=$(/bin/az cognitiveservices account keys list \
         --name "$ai_name" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --query key1 -o tsv)
