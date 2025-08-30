@@ -4,3 +4,4 @@ data/
 .DS_Store
 backend/.config.yaml
 backend/config.yaml
+material
