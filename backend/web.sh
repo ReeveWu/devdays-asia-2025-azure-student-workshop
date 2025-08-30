@@ -59,8 +59,7 @@ echo "Function App: $FUNCTION_APP_NAME"
 echo "AI 服務: $AI_SERVICE_NAME"
 echo ""
 
-# 請使用者輸入 OpenAI 部署名稱
-read -p "請輸入 OpenAI 部署名稱: " OPENAI_DEPLOYMENT
+OPENAI_DEPLOYMENT="gpt-4.1-mini"
 
 # 請使用者輸入 SAS Token
 read -p "請輸入 Azure Storage SAS Token: " USER_SAS_TOKEN
