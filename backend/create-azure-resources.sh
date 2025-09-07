@@ -7,37 +7,62 @@ if ! command -v /bin/az &> /dev/null; then
 fi
 
 # Configuration
+
+# Updated region options as requested
 while true; do
     echo "Available Azure regions:"
-    echo "1) Japan East (japaneast)"
-    echo "2) Sweden Central (swedencentral)"
-    echo "3) Switzerland North (switzerlandnorth)"
-    echo "4) Norway East (norwayeast)"
-    echo "5) West US (westus)"
-    echo "6) West US 3 (westus3)"
-    echo "7) East US (eastus)"
-    echo "8) East US 2 (eastus2)"
+    echo "1) Australia East (australiaeast)"
+    echo "2) Brazil South (brazilsouth)"
+    echo "3) East US (eastus)"
+    echo "4) East US 2 (eastus2)"
+    echo "5) France Central (francecentral)"
+    echo "6) Japan East (japaneast)"
+    echo "7) South Central US (southcentralus)"
+    echo "8) Sweden Central (swedencentral)"
+    echo "9) UK South (uksouth)"
+    echo "10) West US (westus)"
+    echo "11) West US 3 (westus3)"
     echo ""
-    read -p "Select region (1-8): " region_choice
+    read -p "Select region (1-11): " region_choice
 
     case $region_choice in
-        1) LOCATION="japaneast"; break ;;
-        2) LOCATION="swedencentral"; break ;;
-        3) LOCATION="switzerlandnorth"; break ;;
-        4) LOCATION="norwayeast"; break ;;
-        5) LOCATION="westus"; break ;;
-        6) LOCATION="westus3"; break ;;
-        7) LOCATION="eastus"; break ;;
-        8) LOCATION="eastus2"; break ;;
-        *) echo "Invalid choice. Please enter a number between 1-8." ;;
+        1) LOCATION="australiaeast"; break ;;
+        2) LOCATION="brazilsouth"; break ;;
+        3) LOCATION="eastus"; break ;;
+        4) LOCATION="eastus2"; break ;;
+        5) LOCATION="francecentral"; break ;;
+        6) LOCATION="japaneast"; break ;;
+        7) LOCATION="southcentralus"; break ;;
+        8) LOCATION="swedencentral"; break ;;
+        9) LOCATION="uksouth"; break ;;
+        10) LOCATION="westus"; break ;;
+        11) LOCATION="westus3"; break ;;
+        *) echo "Invalid choice. Please enter a number between 1-11." ;;
     esac
 done
 
 echo "Selected region: $LOCATION"
 echo ""
 
-read -p "Enter resource group name: " RESOURCE_GROUP_NAME
-read -p "Enter AI service name: " AI_SERVICE_NAME
+
+# Input validation: only allow alphanumeric and special characters, no spaces or newlines
+while true; do
+    read -p "Enter resource group name: " RESOURCE_GROUP_NAME
+    if [[ "$RESOURCE_GROUP_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        break
+    else
+        echo "Invalid input. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
+    fi
+done
+
+while true; do
+    read -p "Enter AI Foundry name: " AI_SERVICE_NAME
+    if [[ "$AI_SERVICE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        break
+    else
+        echo "Invalid input. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
+    fi
+done
 
 # Colors for output
 RED='\033[0;31m'
