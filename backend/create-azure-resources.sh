@@ -8,6 +8,58 @@ fi
 
 # Configuration
 
+# Check if config.json exists
+CONFIG_FILE="config.json"
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Error: Configuration file '$CONFIG_FILE' not found."
+    echo "Please create a config.json file with the following structure:"
+    echo "{"
+    echo "  \"resourceGroupName\": \"your-resource-group-name\","
+    echo "  \"aiServiceName\": \"your-ai-service-name\""
+    echo "}"
+    exit 1
+fi
+
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed. Please install jq to parse JSON configuration."
+    echo "Install with: brew install jq (on macOS)"
+    exit 1
+fi
+
+# Read configuration from JSON file
+echo "Reading configuration from $CONFIG_FILE..."
+RESOURCE_GROUP_NAME=$(jq -r '.resourceGroupName' "$CONFIG_FILE")
+AI_SERVICE_NAME=$(jq -r '.aiServiceName' "$CONFIG_FILE")
+
+# Validate configuration values
+if [[ "$RESOURCE_GROUP_NAME" == "null" || -z "$RESOURCE_GROUP_NAME" ]]; then
+    echo "Error: resourceGroupName is not specified in config.json"
+    exit 1
+fi
+
+if [[ "$AI_SERVICE_NAME" == "null" || -z "$AI_SERVICE_NAME" ]]; then
+    echo "Error: aiServiceName is not specified in config.json"
+    exit 1
+fi
+
+# Validate resource group name format
+if [[ ! "$RESOURCE_GROUP_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "Error: Invalid resource group name. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
+    exit 1
+fi
+
+# Validate AI service name format
+if [[ ! "$AI_SERVICE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "Error: Invalid AI service name. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
+    exit 1
+fi
+
+echo "Configuration loaded successfully:"
+echo "  Resource Group: $RESOURCE_GROUP_NAME"
+echo "  AI Service: $AI_SERVICE_NAME"
+echo ""
+
 # Updated region options as requested
 while true; do
     echo "Available Azure regions:"
@@ -43,26 +95,6 @@ done
 
 echo "Selected region: $LOCATION"
 echo ""
-
-
-# Input validation: only allow alphanumeric and special characters, no spaces or newlines
-while true; do
-    read -p "Enter resource group name: " RESOURCE_GROUP_NAME
-    if [[ "$RESOURCE_GROUP_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
-        break
-    else
-        echo "Invalid input. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
-    fi
-done
-
-while true; do
-    read -p "Enter AI Foundry name: " AI_SERVICE_NAME
-    if [[ "$AI_SERVICE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
-        break
-    else
-        echo "Invalid input. Only letters, numbers, dot (.), underscore (_), and hyphen (-) are allowed. No spaces or newlines."
-    fi
-done
 
 # Colors for output
 RED='\033[0;31m'
