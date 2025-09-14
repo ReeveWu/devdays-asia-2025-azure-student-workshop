@@ -20,17 +20,20 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     exit 1
 fi
 
-# Check if jq is installed
-if ! command -v jq &> /dev/null; then
-    echo "Error: jq is not installed. Please install jq to parse JSON configuration."
-    echo "Install with: brew install jq (on macOS)"
-    exit 1
-fi
+# Function to parse JSON value (simple parser for basic JSON)
+parse_json_value() {
+    local json_file="$1"
+    local key="$2"
+    
+    # Use grep and sed to extract value
+    grep -o "\"$key\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" "$json_file" | \
+    sed 's/.*"[^"]*"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/'
+}
 
 # Read configuration from JSON file
 echo "Reading configuration from $CONFIG_FILE..."
-RESOURCE_GROUP_NAME=$(jq -r '.resourceGroupName' "$CONFIG_FILE")
-AI_SERVICE_NAME=$(jq -r '.aiServiceName' "$CONFIG_FILE")
+RESOURCE_GROUP_NAME=$(parse_json_value "$CONFIG_FILE" "resourceGroupName")
+AI_SERVICE_NAME=$(parse_json_value "$CONFIG_FILE" "aiServiceName")
 
 # Validate configuration values
 if [[ "$RESOURCE_GROUP_NAME" == "null" || -z "$RESOURCE_GROUP_NAME" ]]; then
