@@ -21,22 +21,6 @@ This project aims to build a video Q&A experience on Azure. Users can upload vid
 
 ---
 
-## Repository Layout
-
-```plaintext
-backend/
-  ├─ function_app/         # Azure Functions (HTTP triggers, Python)
-  ├─ create_index/         # Script to create/update AI Search index
-  ├─ functionapp.sh        # Deploys function app, sets settings + CORS
-  ├─ storage.sh            # Configures Blob public access + CORS
-  ├─ index.sh              # Loads env vars, creates Search index
-  ├─ config.template.yaml  # Copy to config.yaml & fill values
-frontend/                  # React app (frontend; details later)
-asset/                     # Architecture diagram
-```
-
----
-
 ## Azure Resources Required
 
 | Resource                            | Purpose                 | Notes                                       |
@@ -50,118 +34,104 @@ asset/                     # Architecture diagram
 
 ---
 
-## Configure Backend
+## Features
 
-1. **Create config file from template**
+This video Q&A system provides:
 
-```bash
-cd backend
-cp config.template.yaml config.yaml
-```
-
-2. **Key fields in `config.yaml`**
-  These map to **runtime environment variables**:
-
-  - `openAI`: endpoint, apiKey, embeddingModelName, embeddingDeploymentName, embeddingDimensions
-  - `aiService`: name (the AI Services/Speech resource name), subscriptionKey
-  - `searchService`: name, clientKey, indexName
-  - `storage`: accountName, blobContainerName, connectionString
-  - `functionApp`: name — used by the deploy script
-
-> * **Never commit secrets** (`apiKey`, connection strings).
-> * Ensure `embeddingDimensions` matches the model (`3072` for `text-embedding-3-large`).
+* **Video Upload & Storage**: Upload videos to Azure Blob Storage
+* **Automatic Transcription**: Convert speech to text using Azure AI Services
+* **Intelligent Indexing**: Generate embeddings and create searchable vector index
+* **Smart Search**: Query video content using natural language
+* **Modern Frontend**: React-based user interface for seamless interaction
 
 ---
 
-## Provision & Configure (Scripts)
+## Technical Stack
 
-> All scripts use **Azure CLI** and `backend/config.yaml`.
-> Make sure you are logged into the correct subscription.
+### Backend
+- **Azure Functions (Python)**: Serverless compute for API endpoints
+- **Azure AI Services (Speech)**: Real-time speech-to-text transcription
+- **Azure OpenAI**: Text embeddings with `text-embedding-3-large` model
+- **Azure AI Search**: Hybrid vector and keyword search index
+- **Azure Blob Storage**: Video file storage with public access
 
-### Create/Update Azure AI Search Index
-
-```bash
-bash ./index.sh
-```
-
-**What it does**:
-
-* Loads env vars from `config.yaml`
-* Installs Python dependencies for indexing
-* Creates/updates index fields:
-  `chunk_id` (key), `id`, `video_name`, `text`, `start_time`, `end_time`, `vector`
+### Frontend
+- **React 18** with TypeScript for type safety
+- **Ant Design (antd)**: Modern UI component library with dark theme
+- **Azure Storage SDK**: Direct blob upload capabilities
+- **Axios**: HTTP client for API communication
 
 ---
 
-### Deploy Azure Functions Backend
+## How It Works
 
-```bash
-bash ./functionapp.sh
-```
+### 1. Video Upload Process
+- Users upload video files through the React frontend
+- Videos are stored directly in Azure Blob Storage using the Azure Storage SDK
+- The system supports various video formats and handles large file uploads
 
-**What it does**:
+### 2. Automatic Processing Pipeline
+- Once uploaded, videos trigger the indexing process via Azure Functions
+- **Speech Transcription**: Azure AI Services convert audio to text with timestamps
+- **Content Chunking**: Transcripts are segmented into meaningful chunks for better search
+- **Vector Embedding**: Each chunk is embedded using Azure OpenAI's `text-embedding-3-large`
+- **Indexing**: Embeddings and metadata are stored in Azure AI Search
 
-* Sets application settings (keys, endpoints)
-* Zips & deploys `backend/function_app`
-* Configures permissive CORS *(restrict in production)*
-
----
-
-### Configure Storage Access + CORS
-
-```bash
-bash ./storage.sh
-```
-
-**What it does**:
-
-* Enables public blob access
-* Sets container access & CORS *(for demo; use signed URLs in production)*
+### 3. Intelligent Query System
+- Users can ask questions in natural language about video content
+- The system performs hybrid search (vector + keyword) to find relevant segments
+- Context from multiple relevant chunks is retrieved and presented
+- Integration with Azure OpenAI provides conversational responses
 
 ---
 
-## API Reference
+## Project Structure
 
-**Base URL**: `https://<your-function-app>.azurewebsites.net`
-
-| Method | Endpoint            | Purpose                                  |
-| ------ | ------------------- | ---------------------------------------- |
-| `POST` | `/api/index_video`  | Index a video (transcribe, embed, index) |
-| `POST` | `/api/delete_video` | Delete a video’s indexed chunks          |
-| `POST` | `/api/query_video`  | Query a video’s transcript               |
-
-**Example Requests**
-
-```bash
-# Index
-curl -sS -X POST \
-  "$FUNCTION_BASE/api/index_video" \
-  -H 'Content-Type: application/json' \
-  -d '{"video_name":"<video_name>"}'
-
-# Query
-curl -sS -X POST \
-  "$FUNCTION_BASE/api/query_video" \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"<query>","videoId":"<video_name>"}'
-
-# Delete
-curl -sS -X POST \
-  "$FUNCTION_BASE/api/delete_video" \
-  -H 'Content-Type: application/json' \
-  -d '{"video_name":"<video_name>"}'
+```plaintext
+devdays-2025/
+├── backend/                 # Azure Functions backend
+│   ├── function_app/        # Python function app code
+│   │   ├── function_app.py  # Main HTTP endpoints
+│   │   ├── utils.py         # Helper functions
+│   │   └── requirements.txt # Python dependencies
+│   ├── create_index/        # Search index setup scripts
+│   ├── config.yaml          # Configuration file
+│   └── *.sh                 # Deployment scripts
+├── frontend/                # React TypeScript frontend
+│   ├── src/
+│   │   ├── components/      # React components
+│   │   │   ├── ChatInterface.tsx    # Chat UI with AI
+│   │   │   ├── VideoList.tsx        # Video management
+│   │   │   └── VideoUpload.tsx      # File upload
+│   │   ├── services/        # Azure service integrations
+│   │   └── types/          # TypeScript definitions
+│   ├── public/config.js     # Runtime configuration
+│   └── package.json        # Node.js dependencies
+└── asset/                  # Documentation assets
 ```
 
 ---
 
-## Frontend
+## Key Features in Detail
 
-The **React app** in `frontend/` consumes these APIs.
-Setup & env variables will be documented later.
+### 🎥 Video Management
+- **Drag & Drop Upload**: Intuitive file upload with progress tracking
+- **Format Support**: Supports MP4, AVI, MOV, and other common video formats
+- **Processing Status**: Real-time updates on transcription and indexing progress
+- **Video Library**: Browse and manage uploaded videos with metadata
+
+### 🤖 AI-Powered Chat
+- **Natural Language**: Ask questions in conversational language
+- **Context-Aware**: Maintains conversation context across multiple queries
+- **Streaming Responses**: Real-time response generation with typing indicators
+- **Source Attribution**: Shows which video segments provided the answer
+
+### 🔍 Smart Search Technology
+- **Hybrid Search**: Combines semantic vector search with traditional keyword search
+- **Timestamp Precision**: Locate exact moments in videos where topics are discussed
+- **Multilingual Support**: Works with various languages supported by Azure AI Services
+- **Relevance Ranking**: Advanced algorithms ensure most relevant results appear first
 
 ---
-
 ## License
-
-This workshop code is for **educational/demo** purposes.
-A formal license may be added later — check terms for all dependencies before production.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
