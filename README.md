@@ -58,7 +58,7 @@ This video Q&A system provides:
 ### Frontend
 - **React 18** with TypeScript for type safety
 - **Ant Design (antd)**: Modern UI component library with dark theme
-- **Azure Storage SDK**: Direct blob upload capabilities
+- **Azure SDK**: Integration with Azure services
 - **Axios**: HTTP client for API communication
 
 ---
@@ -130,7 +130,7 @@ devdays-2025/
 - **Hybrid Search**: Combines semantic vector search with traditional keyword search
 - **Timestamp Precision**: Locate exact moments in videos where topics are discussed
 - **Multilingual Support**: Works with various languages supported by Azure AI Services
-- **Relevance Ranking**: Advanced algorithms ensure most relevant results appear first
+- **Relevance Ranking**: Ensure most relevant results appear first
 
 ---
 ## License
