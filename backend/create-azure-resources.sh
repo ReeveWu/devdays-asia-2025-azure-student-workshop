@@ -15,7 +15,8 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
     echo "Please create a config.json file with the following structure:"
     echo "{"
     echo "  \"resourceGroupName\": \"your-resource-group-name\","
-    echo "  \"aiServiceName\": \"your-ai-service-name\""
+    echo "  \"aiServiceName\": \"your-ai-service-name\","
+    echo "  \"location\": \"eastus\""
     echo "}"
     exit 1
 fi
@@ -34,6 +35,7 @@ parse_json_value() {
 echo "Reading configuration from $CONFIG_FILE..."
 RESOURCE_GROUP_NAME=$(parse_json_value "$CONFIG_FILE" "resourceGroupName")
 AI_SERVICE_NAME=$(parse_json_value "$CONFIG_FILE" "aiServiceName")
+LOCATION=$(parse_json_value "$CONFIG_FILE" "location")
 
 # Validate configuration values
 if [[ "$RESOURCE_GROUP_NAME" == "null" || -z "$RESOURCE_GROUP_NAME" ]]; then
@@ -43,6 +45,11 @@ fi
 
 if [[ "$AI_SERVICE_NAME" == "null" || -z "$AI_SERVICE_NAME" ]]; then
     echo "Error: aiServiceName is not specified in config.json"
+    exit 1
+fi
+
+if [[ "$LOCATION" == "null" || -z "$LOCATION" ]]; then
+    echo "Error: location is not specified in config.json"
     exit 1
 fi
 
@@ -58,45 +65,28 @@ if [[ ! "$AI_SERVICE_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
     exit 1
 fi
 
+# Validate location is in supported regions
+SUPPORTED_LOCATIONS=("australiaeast" "brazilsouth" "eastus" "eastus2" "francecentral" "japaneast" "southcentralus" "swedencentral" "uksouth" "westus" "westus3")
+if [[ ! " ${SUPPORTED_LOCATIONS[@]} " =~ " ${LOCATION} " ]]; then
+    echo "Error: Invalid location '$LOCATION'. Supported locations are:"
+    echo "  - australiaeast"
+    echo "  - brazilsouth"
+    echo "  - eastus"
+    echo "  - eastus2"
+    echo "  - francecentral"
+    echo "  - japaneast"
+    echo "  - southcentralus"
+    echo "  - swedencentral"
+    echo "  - uksouth"
+    echo "  - westus"
+    echo "  - westus3"
+    exit 1
+fi
+
 echo "Configuration loaded successfully:"
 echo "  Resource Group: $RESOURCE_GROUP_NAME"
 echo "  AI Service: $AI_SERVICE_NAME"
-echo ""
-
-# Updated region options as requested
-while true; do
-    echo "Available Azure regions:"
-    echo "1) Australia East (australiaeast)"
-    echo "2) Brazil South (brazilsouth)"
-    echo "3) East US (eastus)"
-    echo "4) East US 2 (eastus2)"
-    echo "5) France Central (francecentral)"
-    echo "6) Japan East (japaneast)"
-    echo "7) South Central US (southcentralus)"
-    echo "8) Sweden Central (swedencentral)"
-    echo "9) UK South (uksouth)"
-    echo "10) West US (westus)"
-    echo "11) West US 3 (westus3)"
-    echo ""
-    read -p "Select region (1-11): " region_choice
-
-    case $region_choice in
-        1) LOCATION="australiaeast"; break ;;
-        2) LOCATION="brazilsouth"; break ;;
-        3) LOCATION="eastus"; break ;;
-        4) LOCATION="eastus2"; break ;;
-        5) LOCATION="francecentral"; break ;;
-        6) LOCATION="japaneast"; break ;;
-        7) LOCATION="southcentralus"; break ;;
-        8) LOCATION="swedencentral"; break ;;
-        9) LOCATION="uksouth"; break ;;
-        10) LOCATION="westus"; break ;;
-        11) LOCATION="westus3"; break ;;
-        *) echo "Invalid choice. Please enter a number between 1-11." ;;
-    esac
-done
-
-echo "Selected region: $LOCATION"
+echo "  Location: $LOCATION"
 echo ""
 
 # Colors for output

@@ -1,4 +1,5 @@
 {
   "resourceGroupName": "null",
-  "aiServiceName": "null"
+  "aiServiceName": "null",
+  "location": "null"
 }
